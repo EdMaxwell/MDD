@@ -1,0 +1,18 @@
+# Workspace / IDE
+.idea/
+.DS_Store
+Thumbs.db
+
+# Frontend (Angular / npm)
+front/node_modules/
+front/.angular/cache/
+front/dist/
+front/coverage/
+front/tmp/
+front/out-tsc/
+npm-debug.log*
+yarn-error.log*
+
+# Backend (Maven / Spring Boot)
+back/target/
+
