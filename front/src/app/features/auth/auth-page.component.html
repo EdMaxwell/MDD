@@ -1,0 +1,79 @@
+<main class="page-shell">
+  @if (isLanding()) {
+    <section class="landing-page">
+      <app-brand-logo size="large" />
+
+      <div class="landing-actions">
+        <app-ui-button variant="outline" (buttonClick)="navigateTo('login')">Se connecter</app-ui-button>
+        <app-ui-button variant="outline" (buttonClick)="navigateTo('register')">S'inscrire</app-ui-button>
+      </div>
+    </section>
+  } @else {
+    <section class="form-page">
+      <div class="desktop-topbar">
+        <app-topbar />
+      </div>
+
+      <div class="form-content">
+        <div class="form-frame">
+        <button type="button" class="back-button" (click)="backToHome()" aria-label="Retour">
+          <span aria-hidden="true">←</span>
+        </button>
+
+        <div class="mobile-logo">
+          <app-brand-logo size="medium" />
+        </div>
+
+          <header class="form-header">
+            <h1>{{ title() }}</h1>
+          </header>
+
+          <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form" novalidate>
+            @if (isRegister()) {
+              <label>
+                <span>Nom d'utilisateur</span>
+                <input type="text" formControlName="name" />
+                @if (hasError('name', 'required')) {
+                  <small>Le nom est obligatoire.</small>
+                }
+                @if (hasError('name', 'minlength')) {
+                  <small>Le nom doit contenir au moins 2 caracteres.</small>
+                }
+              </label>
+            }
+
+            <label>
+              <span>{{ isLogin() ? "E-mail ou nom d'utilisateur" : 'Adresse e-mail' }}</span>
+              <input [type]="isLogin() ? 'text' : 'email'" formControlName="email" />
+              @if (hasError('email', 'required')) {
+                <small>L'identifiant est obligatoire.</small>
+              }
+              @if (!isLogin() && hasError('email', 'email')) {
+                <small>Le format de l'email est invalide.</small>
+              }
+            </label>
+
+            <label>
+              <span>Mot de passe</span>
+              <input type="password" formControlName="password" />
+              @if (hasError('password', 'required')) {
+                <small>Le mot de passe est obligatoire.</small>
+              }
+              @if (hasError('password', 'minlength')) {
+                <small>Le mot de passe doit contenir au moins 8 caracteres.</small>
+              }
+            </label>
+
+            @if (errorMessage()) {
+              <p class="feedback">{{ errorMessage() }}</p>
+            }
+
+            <app-ui-button buttonType="submit" [disabled]="loading() || authService.checkingSession()">
+              {{ loading() ? 'Envoi...' : isLogin() ? 'Se connecter' : "S'inscrire" }}
+            </app-ui-button>
+          </form>
+        </div>
+      </div>
+    </section>
+  }
+</main>
