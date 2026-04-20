@@ -26,6 +26,7 @@ import { UiButtonComponent } from '../../shared/ui/ui-button.component';
               <h1>Tu es connecte</h1>
               <strong>{{ user.name }}</strong>
               <span>{{ user.email }}</span>
+              <app-ui-button variant="outline" (buttonClick)="openProfile()">Voir mon profil</app-ui-button>
               <app-ui-button (buttonClick)="logout()">Se deconnecter</app-ui-button>
             </div>
           }
@@ -142,5 +143,9 @@ export class HomePageComponent {
   protected logout(): void {
     this.authService.logout();
     this.router.navigateByUrl('/');
+  }
+
+  protected openProfile(): void {
+    this.router.navigateByUrl('/profile');
   }
 }

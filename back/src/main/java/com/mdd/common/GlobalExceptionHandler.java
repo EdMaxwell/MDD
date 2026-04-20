@@ -2,6 +2,9 @@ package com.mdd.common;
 
 import com.mdd.auth.exception.EmailAlreadyUsedException;
 import com.mdd.auth.exception.InvalidCredentialsException;
+import com.mdd.auth.exception.InvalidRefreshTokenException;
+import com.mdd.auth.exception.SuspiciousRefreshTokenReuseException;
+import com.mdd.user.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -36,9 +39,26 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.UNAUTHORIZED, exception.getMessage(), null);
     }
 
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidRefreshToken(InvalidRefreshTokenException exception) {
+        return buildResponse(HttpStatus.UNAUTHORIZED, exception.getMessage(), null);
+    }
+
+    @ExceptionHandler(SuspiciousRefreshTokenReuseException.class)
+    public ResponseEntity<ApiErrorResponse> handleSuspiciousRefreshTokenReuse(
+            SuspiciousRefreshTokenReuseException exception
+    ) {
+        return buildResponse(HttpStatus.UNAUTHORIZED, exception.getMessage(), null);
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiErrorResponse> handleAccessDenied(AccessDeniedException exception) {
         return buildResponse(HttpStatus.FORBIDDEN, "Access denied", null);
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleUserNotFound(UserNotFoundException exception) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), null);
     }
 
     @ExceptionHandler(Exception.class)
