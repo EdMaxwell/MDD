@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.mdd.auth.domain.User;
 import com.mdd.auth.dto.LoginRequest;
+import com.mdd.auth.dto.RefreshTokenRequest;
 import com.mdd.auth.dto.RegisterRequest;
 import com.mdd.auth.exception.EmailAlreadyUsedException;
 import com.mdd.auth.exception.InvalidCredentialsException;
@@ -39,11 +40,14 @@ class AuthServiceTest {
     @Mock
     private JwtService jwtService;
 
+    @Mock
+    private RefreshTokenService refreshTokenService;
+
     private AuthService authService;
 
     @BeforeEach
     void setUp() {
-        authService = new AuthService(userRepository, passwordEncoder, authenticationManager, jwtService);
+        authService = new AuthService(userRepository, passwordEncoder, authenticationManager, jwtService, refreshTokenService);
     }
 
     @Test
@@ -55,8 +59,9 @@ class AuthServiceTest {
         when(passwordEncoder.encode("password123")).thenReturn("hashed-password");
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
         when(jwtService.generateToken(savedUser)).thenReturn("jwt-token");
+        when(refreshTokenService.createFor(savedUser, null)).thenReturn("refresh-token");
 
-        var response = authService.register(request);
+        var response = authService.register(request, null);
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
@@ -64,6 +69,7 @@ class AuthServiceTest {
         assertThat(userCaptor.getValue().getEmail()).isEqualTo("alice@example.com");
         assertThat(userCaptor.getValue().getName()).isEqualTo("Alice");
         assertThat(response.token()).isEqualTo("jwt-token");
+        assertThat(response.refreshToken()).isEqualTo("refresh-token");
         assertThat(response.user().email()).isEqualTo("alice@example.com");
     }
 
@@ -72,7 +78,7 @@ class AuthServiceTest {
         RegisterRequest request = new RegisterRequest("Alice", "alice@example.com", "password123");
         when(userRepository.existsByEmailIgnoreCase("alice@example.com")).thenReturn(true);
 
-        assertThatThrownBy(() -> authService.register(request))
+        assertThatThrownBy(() -> authService.register(request, null))
                 .isInstanceOf(EmailAlreadyUsedException.class);
     }
 
@@ -85,10 +91,28 @@ class AuthServiceTest {
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(authentication);
         when(jwtService.generateToken(user)).thenReturn("jwt-token");
+        when(refreshTokenService.createFor(user, null)).thenReturn("refresh-token");
 
-        var response = authService.login(request);
+        var response = authService.login(request, null);
 
         assertThat(response.token()).isEqualTo("jwt-token");
+        assertThat(response.refreshToken()).isEqualTo("refresh-token");
+        assertThat(response.user().email()).isEqualTo("alice@example.com");
+    }
+
+    @Test
+    void refreshShouldRotateRefreshTokenAndReturnNewAccessToken() {
+        User user = new User("Alice", "alice@example.com", "hashed-password");
+        RefreshTokenRequest request = new RefreshTokenRequest("old-refresh-token");
+
+        when(refreshTokenService.rotate("old-refresh-token", null))
+                .thenReturn(new RefreshTokenRotation(user, "new-refresh-token"));
+        when(jwtService.generateToken(user)).thenReturn("new-jwt-token");
+
+        var response = authService.refresh(request, null);
+
+        assertThat(response.token()).isEqualTo("new-jwt-token");
+        assertThat(response.refreshToken()).isEqualTo("new-refresh-token");
         assertThat(response.user().email()).isEqualTo("alice@example.com");
     }
 
@@ -98,7 +122,7 @@ class AuthServiceTest {
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new BadCredentialsException("bad credentials"));
 
-        assertThatThrownBy(() -> authService.login(request))
+        assertThatThrownBy(() -> authService.login(request, null))
                 .isInstanceOf(InvalidCredentialsException.class);
     }
 }

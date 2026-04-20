@@ -2,6 +2,8 @@ package com.mdd.common;
 
 import com.mdd.auth.exception.EmailAlreadyUsedException;
 import com.mdd.auth.exception.InvalidCredentialsException;
+import com.mdd.auth.exception.InvalidRefreshTokenException;
+import com.mdd.auth.exception.SuspiciousRefreshTokenReuseException;
 import com.mdd.user.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
@@ -34,6 +36,18 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ApiErrorResponse> handleInvalidCredentials(InvalidCredentialsException exception) {
+        return buildResponse(HttpStatus.UNAUTHORIZED, exception.getMessage(), null);
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidRefreshToken(InvalidRefreshTokenException exception) {
+        return buildResponse(HttpStatus.UNAUTHORIZED, exception.getMessage(), null);
+    }
+
+    @ExceptionHandler(SuspiciousRefreshTokenReuseException.class)
+    public ResponseEntity<ApiErrorResponse> handleSuspiciousRefreshTokenReuse(
+            SuspiciousRefreshTokenReuseException exception
+    ) {
         return buildResponse(HttpStatus.UNAUTHORIZED, exception.getMessage(), null);
     }
 

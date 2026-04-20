@@ -1,7 +1,7 @@
 import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, catchError, map, tap, throwError } from 'rxjs';
+import { Observable, catchError, map, switchMap, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface AuthUser {
@@ -26,6 +26,7 @@ export interface LoadedUserProfile extends UserProfile {
 
 export interface AuthResponse {
   token: string;
+  refreshToken?: string;
   user: AuthUser;
 }
 
@@ -65,13 +66,13 @@ export class AuthService {
       return;
     }
 
-    const token = localStorage.getItem(this.storageKey);
-    if (!token) {
-      return;
-    }
-
     this.checkingSession.set(true);
-    this.fetchCurrentUser().subscribe({
+    const token = localStorage.getItem(this.storageKey);
+    const sessionRequest = token
+      ? this.fetchCurrentUser().pipe(catchError(() => this.refreshSession().pipe(map((response) => response.user))))
+      : this.refreshSession().pipe(map((response) => response.user));
+
+    sessionRequest.subscribe({
       next: (user) => {
         this.currentUser.set(user);
         this.checkingSession.set(false);
@@ -82,22 +83,25 @@ export class AuthService {
 
   login(payload: LoginPayload) {
     return this.http
-      .post<AuthResponse>(`${environment.apiUrl}/auth/login`, payload)
+      .post<AuthResponse>(`${environment.apiUrl}/auth/login`, payload, { withCredentials: true })
       .pipe(tap((response) => this.storeSession(response)));
   }
 
   register(payload: RegisterPayload) {
     return this.http
-      .post<AuthResponse>(`${environment.apiUrl}/auth/register`, payload)
+      .post<AuthResponse>(`${environment.apiUrl}/auth/register`, payload, { withCredentials: true })
       .pipe(tap((response) => this.storeSession(response)));
   }
 
   logout(): void {
+    this.http.post<void>(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true }).subscribe({
+      error: () => undefined,
+    });
     this.clearSession();
   }
 
   loadProfile(): Observable<LoadedUserProfile> {
-    return this.http.get<UserProfile>(`${environment.apiUrl}/users/me`, this.authOptions()).pipe(
+    return this.requestWithRefresh(() => this.http.get<UserProfile>(`${environment.apiUrl}/users/me`, this.authOptions())).pipe(
       map(
         (profile) =>
           ({
@@ -111,7 +115,7 @@ export class AuthService {
           return throwError(() => error);
         }
 
-        return this.fetchCurrentUser().pipe(
+        return this.requestWithRefresh(() => this.fetchCurrentUser()).pipe(
           map(
             (user) =>
               ({
@@ -126,7 +130,9 @@ export class AuthService {
   }
 
   updateProfile(payload: UpdateProfilePayload): Observable<UserProfile> {
-    return this.http.put<UserProfile>(`${environment.apiUrl}/users/me`, payload, this.authOptions()).pipe(
+    return this.requestWithRefresh(() =>
+      this.http.put<UserProfile>(`${environment.apiUrl}/users/me`, payload, this.authOptions()),
+    ).pipe(
       tap((profile) => this.currentUser.set(this.toAuthUser(profile))),
     );
   }
@@ -151,11 +157,30 @@ export class AuthService {
     return this.http.get<AuthUser>(`${environment.apiUrl}/auth/me`, this.authOptions());
   }
 
+  private refreshSession(): Observable<AuthResponse> {
+    return this.http
+      .post<AuthResponse>(`${environment.apiUrl}/auth/refresh`, {}, { withCredentials: true })
+      .pipe(tap((response) => this.storeSession(response)));
+  }
+
+  private requestWithRefresh<T>(requestFactory: () => Observable<T>): Observable<T> {
+    return requestFactory().pipe(
+      catchError((error) => {
+        if (error.status !== 401) {
+          return throwError(() => error);
+        }
+
+        return this.refreshSession().pipe(switchMap(() => requestFactory()));
+      }),
+    );
+  }
+
   private authOptions() {
     const token = isPlatformBrowser(this.platformId) ? localStorage.getItem(this.storageKey) : null;
 
     return {
       headers: token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : new HttpHeaders(),
+      withCredentials: true,
     };
   }
 
