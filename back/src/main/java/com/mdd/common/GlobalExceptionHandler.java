@@ -2,6 +2,7 @@ package com.mdd.common;
 
 import com.mdd.auth.exception.EmailAlreadyUsedException;
 import com.mdd.auth.exception.InvalidCredentialsException;
+import com.mdd.user.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -39,6 +40,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiErrorResponse> handleAccessDenied(AccessDeniedException exception) {
         return buildResponse(HttpStatus.FORBIDDEN, "Access denied", null);
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleUserNotFound(UserNotFoundException exception) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), null);
     }
 
     @ExceptionHandler(Exception.class)
