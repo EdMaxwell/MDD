@@ -1,0 +1,77 @@
+<main class="article-shell">
+  <section class="article-page">
+    <div class="article-topbar">
+      <app-topbar />
+    </div>
+
+    <section class="detail-content">
+      <button type="button" class="back-button" aria-label="Retour aux articles" (click)="goBack()">
+        <span aria-hidden="true">&larr;</span>
+      </button>
+
+      @if (loadingArticle()) {
+        <section class="article-state">
+          <p>Chargement de l'article...</p>
+        </section>
+      } @else if (article(); as article) {
+        <article class="article-detail">
+          <h1>{{ article.title }}</h1>
+
+          <dl class="article-meta">
+            <div>
+              <dt>Date</dt>
+              <dd>{{ article.createdAt | date: 'dd/MM/yyyy' }}</dd>
+            </div>
+            <div>
+              <dt>Auteur</dt>
+              <dd>{{ article.authorName }}</dd>
+            </div>
+            <div>
+              <dt>Theme</dt>
+              <dd>{{ article.topicName }}</dd>
+            </div>
+          </dl>
+
+          <p class="article-body">{{ article.content }}</p>
+        </article>
+
+        <section class="comments-section" aria-labelledby="comments-title">
+          <h2 id="comments-title">Commentaires</h2>
+
+          <div class="comments-list">
+            @for (comment of comments(); track comment.id) {
+              <article class="comment-item">
+                <p class="comment-author">{{ comment.authorName }}</p>
+                <p class="comment-content">{{ comment.content }}</p>
+              </article>
+            }
+          </div>
+
+          <form class="comment-form" [formGroup]="commentForm" (ngSubmit)="submitComment()">
+            <label>
+              <span class="sr-only">Commentaire</span>
+              <textarea formControlName="content" placeholder="Ecrivez ici votre commentaire"></textarea>
+            </label>
+
+            <button
+              type="submit"
+              class="send-button"
+              [disabled]="submittingComment()"
+              aria-label="Envoyer le commentaire"
+            >
+              <span aria-hidden="true"></span>
+            </button>
+          </form>
+
+          @if (feedback()) {
+            <p class="feedback">{{ feedback() }}</p>
+          }
+        </section>
+      } @else {
+        <section class="article-state article-state-error">
+          <p>{{ feedback() }}</p>
+        </section>
+      }
+    </section>
+  </section>
+</main>

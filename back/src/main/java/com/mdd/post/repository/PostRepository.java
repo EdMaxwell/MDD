@@ -2,6 +2,7 @@ package com.mdd.post.repository;
 
 import com.mdd.post.domain.Post;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -10,6 +11,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface PostRepository extends JpaRepository<Post, UUID> {
+
+    @EntityGraph(attributePaths = {"author", "topic"})
+    Optional<Post> findWithAuthorAndTopicById(UUID id);
 
     @EntityGraph(attributePaths = {"author", "topic"})
     @Query("""

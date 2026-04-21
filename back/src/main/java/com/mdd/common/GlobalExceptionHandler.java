@@ -4,6 +4,7 @@ import com.mdd.auth.exception.EmailAlreadyUsedException;
 import com.mdd.auth.exception.InvalidCredentialsException;
 import com.mdd.auth.exception.InvalidRefreshTokenException;
 import com.mdd.auth.exception.SuspiciousRefreshTokenReuseException;
+import com.mdd.post.exception.PostNotFoundException;
 import com.mdd.topic.exception.TopicNotFoundException;
 import com.mdd.user.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -64,6 +65,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(TopicNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleTopicNotFound(TopicNotFoundException exception) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), null);
+    }
+
+    @ExceptionHandler(PostNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handlePostNotFound(PostNotFoundException exception) {
         return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), null);
     }
 

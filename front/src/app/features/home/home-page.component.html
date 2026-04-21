@@ -30,7 +30,7 @@
     } @else if (articles().length) {
       <section class="article-grid" aria-label="Fil d'actualite">
         @for (article of articles(); track article.id) {
-          <app-article-card [article]="article" />
+          <app-article-card [article]="article" (articleClick)="openArticle($event)" />
         }
       </section>
     } @else {

@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, input } from '@angular/core';
+import { Component, EventEmitter, Output, input } from '@angular/core';
 import { ArticleFeedItem } from './article-feed.service';
 
 @Component({
@@ -7,7 +7,14 @@ import { ArticleFeedItem } from './article-feed.service';
   standalone: true,
   imports: [DatePipe],
   template: `
-    <article class="article-card">
+    <article
+      class="article-card"
+      role="button"
+      tabindex="0"
+      (click)="articleClick.emit(article().id)"
+      (keydown.enter)="articleClick.emit(article().id)"
+      (keydown.space)="selectFromSpace($event)"
+    >
       <h2>{{ article().title }}</h2>
 
       <dl class="article-meta">
@@ -34,6 +41,12 @@ import { ArticleFeedItem } from './article-feed.service';
         border-radius: 8px;
         background: #f5f5f5;
         overflow: hidden;
+        cursor: pointer;
+      }
+
+      .article-card:focus-visible {
+        outline: 2px solid #7763da;
+        outline-offset: 3px;
       }
 
       h2,
@@ -106,4 +119,11 @@ import { ArticleFeedItem } from './article-feed.service';
 })
 export class ArticleCardComponent {
   readonly article = input.required<ArticleFeedItem>();
+
+  @Output() readonly articleClick = new EventEmitter<string>();
+
+  protected selectFromSpace(event: Event): void {
+    event.preventDefault();
+    this.articleClick.emit(this.article().id);
+  }
 }

@@ -32,9 +32,8 @@ export class ProfilePageComponent {
   protected readonly profile = signal<LoadedUserProfile | null>(null);
   protected readonly profileError = signal('');
   protected readonly saveError = signal('');
-  protected readonly subscriptionError = signal('');
   protected readonly successMessage = signal('');
-  protected readonly unsubscribingTopicIds = signal<Set<string>>(new Set());
+  protected readonly updatingSubscriptionIds = signal<Set<string>>(new Set());
 
   protected readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -101,7 +100,7 @@ export class ProfilePageComponent {
   }
 
   protected isUnsubscribing(topicId: string): boolean {
-    return this.unsubscribingTopicIds().has(topicId);
+    return this.updatingSubscriptionIds().has(topicId);
   }
 
   protected unsubscribe(topicId: string): void {
@@ -110,20 +109,28 @@ export class ProfilePageComponent {
       return;
     }
 
-    this.subscriptionError.set('');
-    this.trackUnsubscribing(topicId, true);
+    this.saveError.set('');
+    this.successMessage.set('');
+    this.trackSubscriptionUpdate(topicId, true);
 
     this.topicSubscriptionService.unsubscribe(topicId).subscribe({
       next: () => {
-        this.profile.set({
-          ...currentProfile,
-          subscriptions: currentProfile.subscriptions.filter((subscription) => subscription.id !== topicId),
+        this.profile.update((profile) => {
+          if (!profile) {
+            return profile;
+          }
+
+          return {
+            ...profile,
+            subscriptions: profile.subscriptions.filter((subscription) => subscription.id !== topicId),
+          };
         });
-        this.trackUnsubscribing(topicId, false);
+        this.trackSubscriptionUpdate(topicId, false);
+        this.successMessage.set('Abonnement supprime avec succes.');
       },
       error: (error: HttpErrorResponse) => {
-        this.trackUnsubscribing(topicId, false);
-        this.subscriptionError.set(this.resolveSubscriptionError(error));
+        this.trackSubscriptionUpdate(topicId, false);
+        this.saveError.set(this.resolveUnsubscribeError(error));
       },
     });
   }
@@ -136,7 +143,6 @@ export class ProfilePageComponent {
   private loadProfile(): void {
     this.loadingProfile.set(true);
     this.profileError.set('');
-    this.subscriptionError.set('');
     this.successMessage.set('');
 
     this.authService.loadProfile().subscribe({
@@ -191,7 +197,19 @@ export class ProfilePageComponent {
     return 'Impossible de mettre a jour le profil pour le moment.';
   }
 
-  private resolveSubscriptionError(error: HttpErrorResponse): string {
+  private trackSubscriptionUpdate(topicId: string, updating: boolean): void {
+    this.updatingSubscriptionIds.update((topicIds) => {
+      const nextTopicIds = new Set(topicIds);
+      if (updating) {
+        nextTopicIds.add(topicId);
+      } else {
+        nextTopicIds.delete(topicId);
+      }
+      return nextTopicIds;
+    });
+  }
+
+  private resolveUnsubscribeError(error: HttpErrorResponse): string {
     if (error.status === 0) {
       return 'Le backend est inaccessible. Verifie que Spring Boot tourne sur le port 8080.';
     }
@@ -204,18 +222,6 @@ export class ProfilePageComponent {
       return "Ce theme n'existe plus.";
     }
 
-    return "Impossible de se desabonner de ce theme pour le moment.";
-  }
-
-  private trackUnsubscribing(topicId: string, unsubscribing: boolean): void {
-    this.unsubscribingTopicIds.update((topicIds) => {
-      const nextTopicIds = new Set(topicIds);
-      if (unsubscribing) {
-        nextTopicIds.add(topicId);
-      } else {
-        nextTopicIds.delete(topicId);
-      }
-      return nextTopicIds;
-    });
+    return "Impossible de supprimer l'abonnement pour le moment.";
   }
 }

@@ -49,7 +49,11 @@ export class HomePageComponent {
   }
 
   protected createArticle(): void {
-    // Creation is outside this mission; keep the visible action ready for the next article workflow.
+    this.router.navigateByUrl('/articles/new');
+  }
+
+  protected openArticle(articleId: string): void {
+    this.router.navigate(['/articles', articleId]);
   }
 
   private loadFeed(): void {
