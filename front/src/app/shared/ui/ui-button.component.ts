@@ -9,6 +9,7 @@ import { Component, EventEmitter, Output, input } from '@angular/core';
       class="ui-button"
       [class.ui-button-outline]="variant() === 'outline'"
       [class.ui-button-primary]="variant() === 'primary'"
+      [class.ui-button-muted]="variant() === 'muted'"
       [disabled]="disabled()"
       (click)="buttonClick.emit()"
     >
@@ -40,15 +41,20 @@ import { Component, EventEmitter, Output, input } from '@angular/core';
         color: #ffffff;
       }
 
+      .ui-button-muted {
+        border: 0;
+        background: #939393;
+        color: #ffffff;
+      }
+
       .ui-button:disabled {
-        opacity: 0.7;
-        cursor: wait;
+        cursor: default;
       }
     `,
   ],
 })
 export class UiButtonComponent {
-  readonly variant = input<'primary' | 'outline'>('primary');
+  readonly variant = input<'primary' | 'outline' | 'muted'>('primary');
   readonly buttonType = input<'button' | 'submit'>('button');
   readonly disabled = input(false);
 

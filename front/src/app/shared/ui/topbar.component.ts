@@ -18,7 +18,7 @@ import { BrandLogoComponent } from './brand-logo.component';
           <button type="button" class="logout-action" (click)="logout()">Se deconnecter</button>
         }
         <a routerLink="/home" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Articles</a>
-        <span>Themes</span>
+        <a routerLink="/topics" routerLinkActive="is-active">Themes</a>
       </nav>
 
       <a routerLink="/profile" routerLinkActive="is-active-icon" class="profile-link" aria-label="Profil utilisateur">
