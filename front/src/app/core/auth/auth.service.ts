@@ -141,6 +141,14 @@ export class AuthService {
     return this.requestWithRefresh(() => this.http.get<T>(url, this.authOptions()));
   }
 
+  authenticatedPost<T>(url: string, body: unknown): Observable<T> {
+    return this.requestWithRefresh(() => this.http.post<T>(url, body, this.authOptions()));
+  }
+
+  authenticatedDelete<T>(url: string): Observable<T> {
+    return this.requestWithRefresh(() => this.http.delete<T>(url, this.authOptions()));
+  }
+
   private storeSession(response: AuthResponse): void {
     this.currentUser.set(response.user);
     this.checkingSession.set(false);
