@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
 import { BrandLogoComponent } from './brand-logo.component';
 
 @Component({
@@ -13,6 +14,9 @@ import { BrandLogoComponent } from './brand-logo.component';
       </a>
 
       <nav class="topbar-nav" aria-label="Navigation principale">
+        @if (authService.isAuthenticated()) {
+          <button type="button" class="logout-action" (click)="logout()">Se deconnecter</button>
+        }
         <a routerLink="/home" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Articles</a>
         <span>Themes</span>
       </nav>
@@ -48,14 +52,23 @@ import { BrandLogoComponent } from './brand-logo.component';
       }
 
       .topbar-nav a,
-      .topbar-nav span {
+      .topbar-nav span,
+      .logout-action {
         color: #121212;
         text-decoration: none;
         font-size: 1rem;
       }
 
       .topbar-nav a.is-active {
+        color: #6f57d2;
+      }
+
+      .logout-action {
+        border: 0;
+        background: transparent;
+        color: #9b1111;
         font-weight: 700;
+        cursor: pointer;
       }
 
       .profile-link {
@@ -111,13 +124,9 @@ import { BrandLogoComponent } from './brand-logo.component';
           padding: 0 1rem;
         }
 
-        .topbar-nav {
-          gap: 1rem;
-        }
-
-        .topbar-nav a,
-        .topbar-nav span {
-          font-size: 0.92rem;
+        .topbar-nav,
+        .profile-link {
+          display: none;
         }
 
         .profile-icon {
@@ -128,4 +137,12 @@ import { BrandLogoComponent } from './brand-logo.component';
     `,
   ],
 })
-export class TopbarComponent {}
+export class TopbarComponent {
+  protected readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+
+  protected logout(): void {
+    this.authService.logout();
+    this.router.navigateByUrl('/');
+  }
+}

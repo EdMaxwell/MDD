@@ -1,0 +1,6 @@
+spring:
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:db/seed/test-data.sql
+      continue-on-error: false

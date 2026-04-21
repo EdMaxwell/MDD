@@ -1,134 +1,37 @@
 import { CommonModule } from '@angular/common';
-import { Component, effect, inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import {
+  ArticleFeedItem,
+  ArticleFeedService,
+  ArticleSortDirection,
+} from '../articles/article-feed.service';
 import { AuthService } from '../../core/auth/auth.service';
-import { BrandLogoComponent } from '../../shared/ui/brand-logo.component';
+import { ArticleCardComponent } from '../articles/article-card.component';
 import { TopbarComponent } from '../../shared/ui/topbar.component';
 import { UiButtonComponent } from '../../shared/ui/ui-button.component';
 
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [CommonModule, BrandLogoComponent, TopbarComponent, UiButtonComponent],
-  template: `
-    <main class="home-shell">
-      <section class="home-page">
-        <div class="home-topbar">
-          <app-topbar />
-        </div>
-
-        <div class="home-panel">
-          <app-brand-logo size="medium" />
-
-          @if (authService.currentUser(); as user) {
-            <div class="session-box">
-              <p class="eyebrow">Accueil</p>
-              <h1>Tu es connecte</h1>
-              <strong>{{ user.name }}</strong>
-              <span>{{ user.email }}</span>
-              <app-ui-button variant="outline" (buttonClick)="openProfile()">Voir mon profil</app-ui-button>
-              <app-ui-button (buttonClick)="logout()">Se deconnecter</app-ui-button>
-            </div>
-          }
-        </div>
-      </section>
-    </main>
-  `,
-  styles: [
-    `
-      :host {
-        display: block;
-        min-height: 100dvh;
-        font-family: Arial, Helvetica, sans-serif;
-        color: #121212;
-        background: #ffffff;
-      }
-
-      .home-shell {
-        min-height: 100dvh;
-        display: grid;
-        place-items: center;
-        padding: 1.25rem;
-      }
-
-      .home-page {
-        width: min(100%, 1100px);
-        min-height: calc(100dvh - 2.5rem);
-        display: grid;
-        grid-template-rows: 52px 1fr;
-      }
-
-      .home-panel {
-        display: grid;
-        place-items: center;
-        align-content: center;
-        gap: 2rem;
-        padding: 2rem;
-      }
-
-      .home-topbar {
-        display: block;
-      }
-
-      .session-box {
-        display: grid;
-        gap: 0.45rem;
-        justify-items: center;
-        text-align: center;
-      }
-
-      .eyebrow {
-        margin: 0;
-        font-size: 12px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: #666666;
-      }
-
-      h1 {
-        margin: 0 0 0.35rem;
-        font-size: 28px;
-        font-weight: 400;
-      }
-
-      strong {
-        font-size: 22px;
-        font-weight: 500;
-      }
-
-      span {
-        color: #666666;
-        font-size: 13px;
-      }
-
-      app-ui-button {
-        margin-top: 1rem;
-      }
-
-      @media (max-width: 768px) {
-        .home-shell {
-          padding: 0.9rem;
-        }
-
-        .home-page {
-          width: min(100%, 360px);
-          min-height: calc(100dvh - 1.8rem);
-          grid-template-rows: 1fr;
-        }
-
-        .home-topbar {
-          display: none;
-        }
-      }
-    `,
-  ],
+  imports: [CommonModule, TopbarComponent, UiButtonComponent, ArticleCardComponent],
+  templateUrl: './home-page.component.html',
+  styleUrl: './home-page.component.scss',
 })
 export class HomePageComponent {
   protected readonly authService = inject(AuthService);
+  private readonly articleFeedService = inject(ArticleFeedService);
   private readonly router = inject(Router);
+
+  protected readonly articles = signal<ArticleFeedItem[]>([]);
+  protected readonly loadingFeed = signal(true);
+  protected readonly feedError = signal('');
+  protected readonly sortDirection = signal<ArticleSortDirection>('desc');
 
   constructor() {
     this.authService.init();
+    this.loadFeed();
 
     effect(() => {
       const isCheckingSession = this.authService.checkingSession();
@@ -140,12 +43,40 @@ export class HomePageComponent {
     });
   }
 
-  protected logout(): void {
-    this.authService.logout();
-    this.router.navigateByUrl('/');
+  protected toggleSort(): void {
+    this.sortDirection.update((direction) => (direction === 'desc' ? 'asc' : 'desc'));
+    this.loadFeed();
   }
 
-  protected openProfile(): void {
-    this.router.navigateByUrl('/profile');
+  protected createArticle(): void {
+    // Creation is outside this mission; keep the visible action ready for the next article workflow.
+  }
+
+  private loadFeed(): void {
+    this.loadingFeed.set(true);
+    this.feedError.set('');
+
+    this.articleFeedService.loadFeed(this.sortDirection()).subscribe({
+      next: (articles) => {
+        this.articles.set(articles);
+        this.loadingFeed.set(false);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.loadingFeed.set(false);
+        this.feedError.set(this.resolveFeedError(error));
+      },
+    });
+  }
+
+  private resolveFeedError(error: HttpErrorResponse): string {
+    if (error.status === 0) {
+      return 'Le backend est inaccessible. Verifie que Spring Boot tourne sur le port 8080.';
+    }
+
+    if (error.status === 401 || error.status === 403) {
+      return 'La session a expire. Reconnecte-toi pour consulter les articles.';
+    }
+
+    return 'Impossible de charger les articles pour le moment.';
   }
 }
