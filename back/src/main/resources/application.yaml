@@ -1,3 +1,28 @@
 spring:
   application:
     name: mdd
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/mdd}
+    username: ${DB_USERNAME:mdd}
+    password: ${DB_PASSWORD:mdd_password}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.sql
+  jackson:
+    default-property-inclusion: non_null
+
+app:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:VGhpc0lzQURldmVsb3BtZW50S2V5VGhhdE11c3RCZUF0TGVhc3QzMkJ5dGVzTG9uZw==}
+      expiration: ${JWT_EXPIRATION:3600000}
+      refresh-expiration: ${JWT_REFRESH_EXPIRATION:2592000000}
+      refresh-cookie-name: ${JWT_REFRESH_COOKIE_NAME:mdd_refresh_token}
+      refresh-cookie-secure: ${JWT_REFRESH_COOKIE_SECURE:false}
+      refresh-cookie-same-site: ${JWT_REFRESH_COOKIE_SAME_SITE:Lax}

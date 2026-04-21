@@ -1,0 +1,42 @@
+<main class="home-shell">
+  <section class="home-page">
+    <div class="home-topbar">
+      <app-topbar />
+    </div>
+
+    <section class="feed-toolbar" aria-label="Actions du fil d'actualite">
+      <app-ui-button (buttonClick)="createArticle()">Creer un article</app-ui-button>
+
+      <button type="button" class="sort-button" (click)="toggleSort()" [attr.aria-label]="sortDirection() === 'desc' ? 'Trier du plus ancien au plus recent' : 'Trier du plus recent au plus ancien'">
+        <span>Trier par</span>
+        <span class="sort-arrow" aria-hidden="true">
+          @if (sortDirection() === 'desc') {
+            &darr;
+          } @else {
+            &uarr;
+          }
+        </span>
+      </button>
+    </section>
+
+    @if (loadingFeed()) {
+      <section class="feed-state">
+        <p>Chargement des articles...</p>
+      </section>
+    } @else if (feedError()) {
+      <section class="feed-state feed-state-error">
+        <p>{{ feedError() }}</p>
+      </section>
+    } @else if (articles().length) {
+      <section class="article-grid" aria-label="Fil d'actualite">
+        @for (article of articles(); track article.id) {
+          <app-article-card [article]="article" (articleClick)="openArticle($event)" />
+        }
+      </section>
+    } @else {
+      <section class="feed-state">
+        <p>Aucun article a afficher pour le moment.</p>
+      </section>
+    }
+  </section>
+</main>
