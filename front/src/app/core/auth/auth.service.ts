@@ -5,13 +5,13 @@ import { Observable, catchError, map, switchMap, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface AuthUser {
-  id: number;
+  id: string;
   name: string;
   email: string;
 }
 
 export interface UserSubscription {
-  id: number;
+  id: string;
   name: string;
   description?: string;
 }
@@ -135,6 +135,10 @@ export class AuthService {
     ).pipe(
       tap((profile) => this.currentUser.set(this.toAuthUser(profile))),
     );
+  }
+
+  authenticatedGet<T>(url: string): Observable<T> {
+    return this.requestWithRefresh(() => this.http.get<T>(url, this.authOptions()));
   }
 
   private storeSession(response: AuthResponse): void {
