@@ -10,6 +10,7 @@ import {
 } from '../../core/auth/auth.service';
 import { TopbarComponent } from '../../shared/ui/topbar.component';
 import { UiButtonComponent } from '../../shared/ui/ui-button.component';
+import { TopicSubscriptionService } from '../topics/topic-subscription.service';
 
 const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 
@@ -23,6 +24,7 @@ const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/
 export class ProfilePageComponent {
   private readonly fb = inject(FormBuilder);
   protected readonly authService = inject(AuthService);
+  private readonly topicSubscriptionService = inject(TopicSubscriptionService);
   private readonly router = inject(Router);
 
   protected readonly loadingProfile = signal(true);
@@ -30,7 +32,9 @@ export class ProfilePageComponent {
   protected readonly profile = signal<LoadedUserProfile | null>(null);
   protected readonly profileError = signal('');
   protected readonly saveError = signal('');
+  protected readonly subscriptionError = signal('');
   protected readonly successMessage = signal('');
+  protected readonly unsubscribingTopicIds = signal<Set<string>>(new Set());
 
   protected readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -96,6 +100,34 @@ export class ProfilePageComponent {
     this.router.navigateByUrl('/');
   }
 
+  protected isUnsubscribing(topicId: string): boolean {
+    return this.unsubscribingTopicIds().has(topicId);
+  }
+
+  protected unsubscribe(topicId: string): void {
+    const currentProfile = this.profile();
+    if (!currentProfile || this.isUnsubscribing(topicId)) {
+      return;
+    }
+
+    this.subscriptionError.set('');
+    this.trackUnsubscribing(topicId, true);
+
+    this.topicSubscriptionService.unsubscribe(topicId).subscribe({
+      next: () => {
+        this.profile.set({
+          ...currentProfile,
+          subscriptions: currentProfile.subscriptions.filter((subscription) => subscription.id !== topicId),
+        });
+        this.trackUnsubscribing(topicId, false);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.trackUnsubscribing(topicId, false);
+        this.subscriptionError.set(this.resolveSubscriptionError(error));
+      },
+    });
+  }
+
   protected hasError(controlName: 'email' | 'name' | 'password', errorCode: string): boolean {
     const control = this.form.controls[controlName];
     return control.touched && control.hasError(errorCode);
@@ -104,6 +136,7 @@ export class ProfilePageComponent {
   private loadProfile(): void {
     this.loadingProfile.set(true);
     this.profileError.set('');
+    this.subscriptionError.set('');
     this.successMessage.set('');
 
     this.authService.loadProfile().subscribe({
@@ -156,5 +189,33 @@ export class ProfilePageComponent {
     }
 
     return 'Impossible de mettre a jour le profil pour le moment.';
+  }
+
+  private resolveSubscriptionError(error: HttpErrorResponse): string {
+    if (error.status === 0) {
+      return 'Le backend est inaccessible. Verifie que Spring Boot tourne sur le port 8080.';
+    }
+
+    if (error.status === 401 || error.status === 403) {
+      return 'La session a expire. Reconnecte-toi pour modifier tes abonnements.';
+    }
+
+    if (error.status === 404) {
+      return "Ce theme n'existe plus.";
+    }
+
+    return "Impossible de se desabonner de ce theme pour le moment.";
+  }
+
+  private trackUnsubscribing(topicId: string, unsubscribing: boolean): void {
+    this.unsubscribingTopicIds.update((topicIds) => {
+      const nextTopicIds = new Set(topicIds);
+      if (unsubscribing) {
+        nextTopicIds.add(topicId);
+      } else {
+        nextTopicIds.delete(topicId);
+      }
+      return nextTopicIds;
+    });
   }
 }
