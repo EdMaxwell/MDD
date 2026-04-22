@@ -11,6 +11,7 @@ import { TopbarComponent } from '../../shared/ui/topbar.component';
 import { UiButtonComponent } from '../../shared/ui/ui-button.component';
 
 type AuthScreen = 'landing' | 'login' | 'register';
+const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 
 /**
  * Handles the landing, login and registration screens from route data.
@@ -102,18 +103,22 @@ export class AuthPageComponent {
 
     const nameControl = this.form.controls.name;
     const emailControl = this.form.controls.email;
+    const passwordControl = this.form.controls.password;
 
     if (this.isRegister()) {
       nameControl.addValidators([Validators.required, Validators.minLength(2), Validators.maxLength(100)]);
       emailControl.setValidators([Validators.required, Validators.email]);
+      passwordControl.setValidators([Validators.required, Validators.pattern(passwordPattern)]);
     } else {
       nameControl.removeValidators([Validators.required, Validators.minLength(2), Validators.maxLength(100)]);
       nameControl.setValue('');
       emailControl.setValidators([Validators.required]);
+      passwordControl.setValidators([Validators.required, Validators.minLength(8)]);
     }
 
     nameControl.updateValueAndValidity();
     emailControl.updateValueAndValidity();
+    passwordControl.updateValueAndValidity();
   }
 
   /**

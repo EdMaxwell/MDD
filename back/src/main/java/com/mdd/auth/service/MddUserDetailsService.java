@@ -7,7 +7,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 /**
- * Loads MDD users for Spring Security using their email address as username.
+ * Loads MDD users for Spring Security using either email or username as login identifier.
  */
 @Service
 public class MddUserDetailsService implements UserDetailsService {
@@ -19,14 +19,15 @@ public class MddUserDetailsService implements UserDetailsService {
     }
 
     /**
-     * Loads a user by email for Spring Security authentication and JWT validation.
+     * Loads a user by email or username for Spring Security authentication and JWT validation.
      *
-     * @param username email submitted as the Spring Security username
+     * @param username email, username or JWT subject submitted as the Spring Security username
      * @return user details used as the authenticated principal
      */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByEmailIgnoreCase(username)
+        String normalizedIdentifier = username.trim().toLowerCase();
+        return userRepository.findByEmailIgnoreCaseOrNameIgnoreCase(normalizedIdentifier, normalizedIdentifier)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 }

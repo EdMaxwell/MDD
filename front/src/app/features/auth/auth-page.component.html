@@ -62,6 +62,9 @@
               @if (hasError('password', 'minlength')) {
                 <small>Le mot de passe doit contenir au moins 8 caracteres.</small>
               }
+              @if (isRegister() && hasError('password', 'pattern')) {
+                <small>Le mot de passe doit contenir au moins 8 caracteres, une majuscule, une minuscule, un chiffre et un caractere special.</small>
+              }
             </label>
 
             @if (errorMessage()) {
