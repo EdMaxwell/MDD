@@ -27,7 +27,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 2rem 1.6rem 1.55rem;
+  padding: 2rem 1.6rem 0;
 }
 
 .feed-toolbar app-ui-button {
@@ -52,44 +52,6 @@
   font-size: 1.6rem;
   line-height: 1;
   font-weight: 400;
-}
-
-.article-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: stretch;
-  gap: 1.35rem 2.9rem;
-  padding: 0 1.45rem 2.5rem;
-}
-
-.feed-paginator {
-  display: block;
-  padding: 0 1rem 2rem;
-}
-
-:host ::ng-deep .feed-paginator .p-paginator {
-  justify-content: center;
-  gap: 0.35rem;
-  border: 0;
-  background: transparent;
-}
-
-:host ::ng-deep .feed-paginator .p-paginator-page,
-:host ::ng-deep .feed-paginator .p-paginator-prev,
-:host ::ng-deep .feed-paginator .p-paginator-next {
-  min-width: 2.3rem;
-  height: 2.3rem;
-  border-radius: 8px;
-}
-
-:host ::ng-deep .feed-paginator .p-paginator-page-selected {
-  background: #7763da;
-  color: #ffffff;
-}
-
-:host ::ng-deep .feed-paginator .p-paginator-current {
-  color: #4a4a4a;
-  font-size: 0.95rem;
 }
 
 .feed-state {
@@ -127,17 +89,4 @@
     min-height: 2.4rem;
   }
 
-  .article-grid {
-    grid-template-columns: 1fr;
-    gap: 1.1rem;
-    padding: 0 0.55rem 2rem;
-  }
-
-  .feed-paginator {
-    padding: 0 0.35rem 1.5rem;
-  }
-
-  :host ::ng-deep .feed-paginator .p-paginator {
-    flex-wrap: wrap;
-  }
 }

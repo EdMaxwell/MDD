@@ -3,11 +3,11 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, effect, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService } from '../../core/auth/auth.service';
-import { TopbarComponent } from '../../shared/ui/topbar/topbar.component';
-import { UiButtonComponent } from '../../shared/ui/ui-button/ui-button.component';
-import { TopicItem, TopicSubscriptionService } from '../topics/topic-subscription.service';
-import { ArticleFeedService } from './article-feed.service';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { TopbarComponent } from '../../../../shared/ui/topbar/topbar.component';
+import { UiButtonComponent } from '../../../../shared/ui/ui-button/ui-button.component';
+import { TopicItem, TopicSubscriptionService } from '../../../topics/topic-subscription.service';
+import { ArticleFeedService } from '../../services/article-feed.service';
 
 /**
  * Presents the article creation form and loads the topic catalog required by it.
@@ -87,7 +87,7 @@ export class ArticleCreatePageComponent {
    */
   private loadTopics(): void {
     this.loadingTopics.set(true);
-    this.topicSubscriptionService.loadTopics().subscribe({
+    this.topicSubscriptionService.loadTopicOptions().subscribe({
       next: (topics) => {
         this.topics.set(topics);
         this.loadingTopics.set(false);

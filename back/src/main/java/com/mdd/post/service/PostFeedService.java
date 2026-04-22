@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PostFeedService {
 
     public static final int DEFAULT_PAGE_SIZE = 6;
-    public static final int MAX_PAGE_SIZE = 6;
+    public static final int MAX_PAGE_SIZE = 24;
 
     private final PostRepository postRepository;
 
@@ -51,7 +51,7 @@ public class PostFeedService {
     }
 
     /**
-     * Applies the feed page-size policy so API consumers never receive more than six cards.
+     * Applies the feed page-size policy so API consumers cannot request an unbounded list.
      */
     private int sanitizeSize(Integer size) {
         if (size == null || size < 1) {

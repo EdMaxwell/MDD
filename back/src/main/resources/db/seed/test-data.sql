@@ -10,7 +10,12 @@ VALUES
     ('20000000-0000-0000-0000-000000000001', 'spring-boot', 'Spring Boot', 'Framework Java pour creer des APIs robustes et maintenables.', true, now(), now()),
     ('20000000-0000-0000-0000-000000000002', 'angular', 'Angular', 'Framework frontend TypeScript pour construire des applications web.', true, now(), now()),
     ('20000000-0000-0000-0000-000000000003', 'postgresql', 'PostgreSQL', 'Base de donnees relationnelle open source orientee fiabilite.', true, now(), now()),
-    ('20000000-0000-0000-0000-000000000004', 'architecture', 'Architecture', 'Bonnes pratiques de conception et d organisation applicative.', true, now(), now())
+    ('20000000-0000-0000-0000-000000000004', 'architecture', 'Architecture', 'Bonnes pratiques de conception et d organisation applicative.', true, now(), now()),
+    ('20000000-0000-0000-0000-000000000005', 'typescript', 'TypeScript', 'Typage statique pour rendre les applications frontend plus fiables.', true, now(), now()),
+    ('20000000-0000-0000-0000-000000000006', 'security', 'Securite', 'Authentification, autorisation et protection des donnees applicatives.', true, now(), now()),
+    ('20000000-0000-0000-0000-000000000007', 'testing', 'Tests', 'Tests unitaires et integration pour verifier les comportements importants.', true, now(), now()),
+    ('20000000-0000-0000-0000-000000000008', 'docker', 'Docker', 'Conteneurs et environnements reproductibles pour le developpement local.', true, now(), now()),
+    ('20000000-0000-0000-0000-000000000009', 'ux-ui', 'UX UI', 'Ergonomie, lisibilite et coherence visuelle des interfaces utilisateur.', true, now(), now())
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO user_topic_subscriptions (id, user_id, topic_id, created_at)

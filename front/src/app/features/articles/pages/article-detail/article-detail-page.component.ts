@@ -3,9 +3,9 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, effect, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AuthService } from '../../core/auth/auth.service';
-import { TopbarComponent } from '../../shared/ui/topbar/topbar.component';
-import { ArticleComment, ArticleDetail, ArticleFeedService } from './article-feed.service';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { TopbarComponent } from '../../../../shared/ui/topbar/topbar.component';
+import { ArticleComment, ArticleDetail, ArticleFeedService } from '../../services/article-feed.service';
 
 /**
  * Displays an article detail and lets the authenticated user append comments.

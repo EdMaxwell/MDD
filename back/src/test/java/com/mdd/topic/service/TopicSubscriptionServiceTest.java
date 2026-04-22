@@ -19,6 +19,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
@@ -57,6 +59,29 @@ class TopicSubscriptionServiceTest {
         assertThat(topics.getFirst().subscribed()).isTrue();
         assertThat(topics.get(1).name()).isEqualTo("Spring");
         assertThat(topics.get(1).subscribed()).isFalse();
+    }
+
+    @Test
+    void listTopicsForShouldReturnPaginatedTopicsWithSubscriptionState() {
+        User authenticatedUser = user();
+        Topic angular = topic("00000000-0000-0000-0000-000000000011", "Angular", "Framework frontend");
+        Topic spring = topic("00000000-0000-0000-0000-000000000012", "Spring", "Framework Java");
+        authenticatedUser.getSubscriptions().add(angular);
+
+        when(userRepository.findWithSubscriptionsById(authenticatedUser.getId())).thenReturn(Optional.of(authenticatedUser));
+        when(topicRepository.findAllByOrderByNameAsc(any(Pageable.class)))
+                .thenAnswer(invocation -> new PageImpl<>(List.of(angular, spring), invocation.getArgument(0), 18));
+
+        var topics = topicSubscriptionService.listTopicsFor(authenticatedUser, 1, 8);
+
+        assertThat(topics.page()).isEqualTo(1);
+        assertThat(topics.size()).isEqualTo(8);
+        assertThat(topics.totalElements()).isEqualTo(18);
+        assertThat(topics.content()).hasSize(2);
+        assertThat(topics.content().getFirst().name()).isEqualTo("Angular");
+        assertThat(topics.content().getFirst().subscribed()).isTrue();
+        assertThat(topics.content().get(1).name()).isEqualTo("Spring");
+        assertThat(topics.content().get(1).subscribed()).isFalse();
     }
 
     @Test

@@ -1,11 +1,22 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
-import { AuthService } from '../../core/auth/auth.service';
+import { environment } from '../../../../environments/environment';
+import { AuthService } from '../../../core/auth/auth.service';
+import {
+  PageResponse,
+  PaginatedApiResponse,
+  normalizePageResponse,
+} from '../../../shared/pagination/page-response';
 
 /** Supported creation-date sort directions for the article feed. */
 export type ArticleSortDirection = 'desc' | 'asc';
+
+/** Default number of article cards displayed per feed page. */
+export const DEFAULT_ARTICLE_FEED_PAGE_SIZE = 6;
+
+/** Page-size choices exposed by the feed paginator. */
+export const ARTICLE_FEED_PAGE_SIZE_OPTIONS = [6, 8, 10, 12] as const;
 
 /** Compact article data rendered in the feed. */
 export interface ArticleFeedItem {
@@ -19,18 +30,7 @@ export interface ArticleFeedItem {
   topicName: string;
 }
 
-/** Generic paginated response returned by the backend. */
-export interface PageResponse<T> {
-  content: T[];
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-  first: boolean;
-  last: boolean;
-}
-
-type ArticleFeedApiResponse = ArticleFeedItem[] | PageResponse<ArticleFeedItem>;
+type ArticleFeedApiResponse = PaginatedApiResponse<ArticleFeedItem>;
 
 /** Comment data returned by the article detail API. */
 export interface ArticleComment {
@@ -68,7 +68,7 @@ export class ArticleFeedService {
   /**
    * Loads one page of the current user's feed from followed topics.
    */
-  loadFeed(sort: ArticleSortDirection, page = 0, size = 6): Observable<PageResponse<ArticleFeedItem>> {
+  loadFeed(sort: ArticleSortDirection, page = 0, size = DEFAULT_ARTICLE_FEED_PAGE_SIZE): Observable<PageResponse<ArticleFeedItem>> {
     const params = new URLSearchParams({
       sort,
       page: String(page),
@@ -76,42 +76,7 @@ export class ArticleFeedService {
     });
     return this.authService
       .authenticatedGet<ArticleFeedApiResponse>(`${environment.apiUrl}/posts/feed?${params}`)
-      .pipe(map((response) => this.normalizeFeedPage(response, page, size)));
-  }
-
-  /**
-   * Accepts both the paginated contract and the previous list contract while local backend instances are refreshed.
-   */
-  private normalizeFeedPage(
-    response: ArticleFeedApiResponse,
-    page: number,
-    size: number,
-  ): PageResponse<ArticleFeedItem> {
-    if (Array.isArray(response)) {
-      const start = page * size;
-      const content = response.slice(start, start + size);
-
-      return {
-        content,
-        page,
-        size,
-        totalElements: response.length,
-        totalPages: Math.ceil(response.length / size),
-        first: page === 0,
-        last: start + size >= response.length,
-      };
-    }
-
-    return {
-      ...response,
-      content: response.content ?? [],
-      page: response.page ?? page,
-      size: response.size ?? size,
-      totalElements: response.totalElements ?? response.content?.length ?? 0,
-      totalPages: response.totalPages ?? 1,
-      first: response.first ?? page === 0,
-      last: response.last ?? true,
-    };
+      .pipe(map((response) => normalizePageResponse(response, page, size)));
   }
 
   /**

@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
 import { AuthPageComponent } from './features/auth/auth-page.component';
-import { ArticleCreatePageComponent } from './features/articles/article-create-page.component';
-import { ArticleDetailPageComponent } from './features/articles/article-detail-page.component';
+import { ArticleCreatePageComponent } from './features/articles/pages/article-create/article-create-page.component';
+import { ArticleDetailPageComponent } from './features/articles/pages/article-detail/article-detail-page.component';
 import { HomePageComponent } from './features/home/home-page.component';
 import { ProfilePageComponent } from './features/profile/profile-page.component';
-import { TopicsPageComponent } from './features/topics/topics-page.component';
+import { TopicsPageComponent } from './features/topics/components/topics-page/topics-page.component';
 
 /**
  * Client routes for the MDD single-page application.

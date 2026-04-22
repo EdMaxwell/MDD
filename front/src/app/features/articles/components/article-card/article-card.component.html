@@ -1,0 +1,29 @@
+<p-card
+  [pt]="cardPassThrough"
+  (click)="articleClick.emit(article().id)"
+  (keydown.enter)="articleClick.emit(article().id)"
+  (keydown.space)="selectFromSpace($event)"
+>
+  <ng-template #title>
+    {{ article().title }}
+  </ng-template>
+
+  <ng-template #subtitle>
+    <dl class="article-meta">
+      <div>
+        <dt>Date</dt>
+        <dd>{{ article().createdAt | date: 'dd/MM/yyyy' }}</dd>
+      </div>
+      <div>
+        <dt>Auteur</dt>
+        <dd>{{ article().authorName }}</dd>
+      </div>
+    </dl>
+  </ng-template>
+
+  <p>{{ article().content }}</p>
+
+  <ng-template #footer>
+    <span class="article-topic">{{ article().topicName }}</span>
+  </ng-template>
+</p-card>

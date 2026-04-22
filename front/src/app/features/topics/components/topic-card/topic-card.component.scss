@@ -1,0 +1,84 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.topic-card {
+  display: grid;
+  height: 10.75rem;
+  max-height: 10.75rem;
+  border: 0;
+  border-radius: 8px;
+  background: #f5f5f5;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+p {
+  margin: 0;
+}
+
+:host ::ng-deep .topic-card .p-card-body {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 0.5rem;
+  height: 100%;
+  padding: 0.75rem 1rem 0.85rem;
+}
+
+:host ::ng-deep .topic-card .p-card-title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: #121212;
+  font-size: 1.1rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+:host ::ng-deep .topic-card .p-card-content,
+:host ::ng-deep .topic-card .p-card-footer {
+  color: #121212;
+}
+
+:host ::ng-deep .topic-card .p-card-content {
+  padding: 0;
+  overflow: hidden;
+}
+
+p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+app-ui-button {
+  display: inline-flex;
+  justify-self: start;
+}
+
+@media (max-width: 960px) {
+  .topic-card {
+    height: 9.65rem;
+    max-height: 9.65rem;
+  }
+
+  :host ::ng-deep .topic-card .p-card-body {
+    gap: 0.4rem;
+    padding: 0.6rem 0.85rem 0.7rem;
+  }
+
+  :host ::ng-deep .topic-card .p-card-title {
+    font-size: 1rem;
+  }
+
+  p {
+    font-size: 0.95rem;
+    line-height: 1.12;
+    -webkit-line-clamp: 3;
+  }
+}

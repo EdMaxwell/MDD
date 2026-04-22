@@ -82,7 +82,7 @@ class PostFeedServiceTest {
     }
 
     @Test
-    void currentUserFeedShouldCapPageSizeToSixCards() {
+    void currentUserFeedShouldCapPageSizeToMaximumAllowedSize() {
         User user = new User("Alice", "alice@example.com", "hashed-password");
         ReflectionTestUtils.setField(user, "id", UUID.fromString("10000000-0000-0000-0000-000000000001"));
         when(postRepository.findFeedByUserSubscriptions(eq(user.getId()), any(Pageable.class)))
@@ -94,7 +94,7 @@ class PostFeedServiceTest {
         org.mockito.Mockito.verify(postRepository).findFeedByUserSubscriptions(eq(user.getId()), pageableCaptor.capture());
 
         assertThat(pageableCaptor.getValue().getPageNumber()).isZero();
-        assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(6);
+        assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(24);
     }
 
     private Post buildPost(User user, String topicName, String title, Instant createdAt) {

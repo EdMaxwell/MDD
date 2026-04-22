@@ -1,9 +1,9 @@
 package com.mdd.topic.controller;
 
 import com.mdd.auth.domain.User;
+import com.mdd.common.PageResponse;
 import com.mdd.topic.dto.TopicResponse;
 import com.mdd.topic.service.TopicSubscriptionService;
-import java.util.List;
 import java.util.UUID;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -30,11 +31,17 @@ public class TopicController {
      * Lists all topics and marks the authenticated user's current subscriptions.
      *
      * @param user principal resolved from the access token
-     * @return topic catalog
+     * @param page zero-based page index
+     * @param size requested page size, capped by the backend
+     * @return paginated topic catalog
      */
     @GetMapping
-    public List<TopicResponse> topics(@AuthenticationPrincipal User user) {
-        return topicSubscriptionService.listTopicsFor(user);
+    public PageResponse<TopicResponse> topics(
+            @AuthenticationPrincipal User user,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size
+    ) {
+        return topicSubscriptionService.listTopicsFor(user, page, size);
     }
 
     /**
