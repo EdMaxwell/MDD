@@ -1,5 +1,5 @@
 import { Component, input, output } from '@angular/core';
-import { UiButtonComponent } from '../../shared/ui/ui-button.component';
+import { UiButtonComponent } from '../../shared/ui/ui-button/ui-button.component';
 import { TopicItem } from './topic-subscription.service';
 
 /**
@@ -63,7 +63,7 @@ import { TopicItem } from './topic-subscription.service';
         justify-self: center;
       }
 
-      @media (max-width: 768px) {
+      @media (max-width: 960px) {
         .topic-card {
           min-height: 7.95rem;
           padding: 0.95rem 0.95rem 0.85rem;

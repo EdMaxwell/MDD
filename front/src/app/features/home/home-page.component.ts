@@ -9,8 +9,8 @@ import {
 } from '../articles/article-feed.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { ArticleCardComponent } from '../articles/article-card.component';
-import { TopbarComponent } from '../../shared/ui/topbar.component';
-import { UiButtonComponent } from '../../shared/ui/ui-button.component';
+import { TopbarComponent } from '../../shared/ui/topbar/topbar.component';
+import { UiButtonComponent } from '../../shared/ui/ui-button/ui-button.component';
 
 /**
  * Displays the authenticated user's article feed and feed-level actions.

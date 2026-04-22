@@ -6,28 +6,8 @@ import { Component, input } from '@angular/core';
 @Component({
   selector: 'app-brand-logo',
   standalone: true,
-  template: '<img class="brand-logo" [class]="sizeClass()" src="/assets/logo_p6.png" alt="MDD" />',
-  styles: [
-    `
-      .brand-logo {
-        display: block;
-        width: 100%;
-        height: auto;
-      }
-
-      .logo-large {
-        max-width: 320px;
-      }
-
-      .logo-medium {
-        max-width: 180px;
-      }
-
-      .logo-small {
-        max-width: 82px;
-      }
-    `,
-  ],
+  templateUrl: './brand-logo.component.html',
+  styleUrl: './brand-logo.component.scss',
 })
 export class BrandLogoComponent {
   /** Logo size variant. */

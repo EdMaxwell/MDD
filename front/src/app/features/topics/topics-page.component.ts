@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
-import { TopbarComponent } from '../../shared/ui/topbar.component';
+import { TopbarComponent } from '../../shared/ui/topbar/topbar.component';
 import { TopicCardComponent } from './topic-card.component';
 import { TopicItem, TopicSubscriptionService } from './topic-subscription.service';
 

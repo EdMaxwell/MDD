@@ -8,8 +8,8 @@ import {
   LoadedUserProfile,
   UpdateProfilePayload,
 } from '../../core/auth/auth.service';
-import { TopbarComponent } from '../../shared/ui/topbar.component';
-import { UiButtonComponent } from '../../shared/ui/ui-button.component';
+import { TopbarComponent } from '../../shared/ui/topbar/topbar.component';
+import { UiButtonComponent } from '../../shared/ui/ui-button/ui-button.component';
 import { TopicSubscriptionService } from '../topics/topic-subscription.service';
 
 const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;

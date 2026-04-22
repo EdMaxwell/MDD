@@ -77,9 +77,12 @@
   color: #8f1d1d;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 960px) {
+  .home-shell,
   .home-page {
-    width: min(100%, 390px);
+    width: 100dvw;
+    max-width: none;
+    margin: 0;
   }
 
   .feed-toolbar {

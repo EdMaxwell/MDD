@@ -15,7 +15,7 @@
   min-height: 100dvh;
   margin: 0 auto;
   display: grid;
-  grid-template-rows: 52px 1fr;
+  grid-template-rows: auto 1fr;
 }
 
 .profile-topbar {
@@ -192,13 +192,12 @@ h1 {
   border: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 960px) {
+  .profile-shell,
   .profile-page {
-    grid-template-rows: 1fr;
-  }
-
-  .profile-topbar {
-    display: none;
+    width: 100dvw;
+    max-width: none;
+    margin: 0;
   }
 
   .profile-content {

@@ -219,9 +219,12 @@ h2 {
   border: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 960px) {
+  .article-shell,
   .article-page {
-    width: min(100%, 390px);
+    width: 100dvw;
+    max-width: none;
+    margin: 0;
   }
 
   .detail-content {
