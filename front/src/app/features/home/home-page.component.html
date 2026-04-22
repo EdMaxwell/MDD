@@ -33,6 +33,19 @@
           <app-article-card [article]="article" (articleClick)="openArticle($event)" />
         }
       </section>
+
+      @if (totalArticles() > pageSize) {
+        <p-paginator
+          class="feed-paginator"
+          [first]="currentPage() * pageSize"
+          [rows]="pageSize"
+          [totalRecords]="totalArticles()"
+          [showCurrentPageReport]="true"
+          [showFirstLastIcon]="false"
+          currentPageReportTemplate="{first}-{last} sur {totalRecords}"
+          (onPageChange)="changePage($event)"
+        />
+      }
     } @else {
       <section class="feed-state">
         <p>Aucun article a afficher pour le moment.</p>

@@ -1,5 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, input, output } from '@angular/core';
+import { CardModule } from 'primeng/card';
+import { CardPassThrough } from 'primeng/types/card';
 import { ArticleFeedItem } from './article-feed.service';
 
 /**
@@ -8,41 +10,53 @@ import { ArticleFeedItem } from './article-feed.service';
 @Component({
   selector: 'app-article-card',
   standalone: true,
-  imports: [DatePipe],
+  imports: [DatePipe, CardModule],
   template: `
-    <article
-      class="article-card"
-      role="button"
-      tabindex="0"
+    <p-card
+      [pt]="cardPassThrough"
       (click)="articleClick.emit(article().id)"
       (keydown.enter)="articleClick.emit(article().id)"
       (keydown.space)="selectFromSpace($event)"
     >
-      <h2>{{ article().title }}</h2>
+      <ng-template #title>
+        {{ article().title }}
+      </ng-template>
 
-      <dl class="article-meta">
-        <div>
-          <dt>Date</dt>
-          <dd>{{ article().createdAt | date: 'dd/MM/yyyy' }}</dd>
-        </div>
-        <div>
-          <dt>Auteur</dt>
-          <dd>{{ article().authorName }}</dd>
-        </div>
-      </dl>
+      <ng-template #subtitle>
+        <dl class="article-meta">
+          <div>
+            <dt>Date</dt>
+            <dd>{{ article().createdAt | date: 'dd/MM/yyyy' }}</dd>
+          </div>
+          <div>
+            <dt>Auteur</dt>
+            <dd>{{ article().authorName }}</dd>
+          </div>
+        </dl>
+      </ng-template>
 
       <p>{{ article().content }}</p>
-    </article>
+
+      <ng-template #footer>
+        <span class="article-topic">{{ article().topicName }}</span>
+      </ng-template>
+    </p-card>
   `,
   styles: [
     `
+      :host {
+        display: block;
+        min-width: 0;
+      }
+
       .article-card {
         display: grid;
-        gap: 0.85rem;
-        min-height: 11.8rem;
-        padding: 1rem 1.1rem 1.15rem;
+        height: 10.75rem;
+        max-height: 10.75rem;
+        border: 0;
         border-radius: 8px;
         background: #f5f5f5;
+        box-shadow: none;
         overflow: hidden;
         cursor: pointer;
       }
@@ -52,17 +66,44 @@ import { ArticleFeedItem } from './article-feed.service';
         outline-offset: 3px;
       }
 
-      h2,
       dl,
       dd,
       p {
         margin: 0;
       }
 
-      h2 {
+      :host ::ng-deep .article-card .p-card-body {
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+        gap: 0.5rem;
+        height: 100%;
+        padding: 0.75rem 1rem 0.85rem;
+      }
+
+      :host ::ng-deep .article-card .p-card-caption {
+        gap: 0.45rem;
+      }
+
+      :host ::ng-deep .article-card .p-card-title {
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        color: #121212;
         font-size: 1.1rem;
         line-height: 1.2;
         font-weight: 700;
+      }
+
+      :host ::ng-deep .article-card .p-card-subtitle,
+      :host ::ng-deep .article-card .p-card-content,
+      :host ::ng-deep .article-card .p-card-footer {
+        color: #121212;
+      }
+
+      :host ::ng-deep .article-card .p-card-content {
+        padding: 0;
+        overflow: hidden;
       }
 
       .article-meta {
@@ -93,17 +134,35 @@ import { ArticleFeedItem } from './article-feed.service';
         display: -webkit-box;
         overflow: hidden;
         -webkit-box-orient: vertical;
-        -webkit-line-clamp: 4;
+        -webkit-line-clamp: 2;
+      }
+
+      .article-topic {
+        display: inline-flex;
+        width: fit-content;
+        max-width: 100%;
+        padding: 0.2rem 0.55rem;
+        border: 1px solid #7763da;
+        border-radius: 999px;
+        color: #5e47bd;
+        font-size: 0.82rem;
+        font-weight: 700;
+        line-height: 1.2;
+        overflow-wrap: anywhere;
       }
 
       @media (max-width: 960px) {
         .article-card {
-          min-height: 8.65rem;
-          gap: 0.55rem;
-          padding: 0.65rem 0.95rem 0.85rem;
+          height: 9.65rem;
+          max-height: 9.65rem;
         }
 
-        h2 {
+        :host ::ng-deep .article-card .p-card-body {
+          gap: 0.4rem;
+          padding: 0.6rem 0.85rem 0.7rem;
+        }
+
+        :host ::ng-deep .article-card .p-card-title {
           font-size: 1rem;
         }
 
@@ -114,7 +173,7 @@ import { ArticleFeedItem } from './article-feed.service';
         }
 
         p {
-          -webkit-line-clamp: 4;
+          -webkit-line-clamp: 2;
         }
       }
     `,
@@ -123,6 +182,15 @@ import { ArticleFeedItem } from './article-feed.service';
 export class ArticleCardComponent {
   /** Article data rendered by the card. */
   readonly article = input.required<ArticleFeedItem>();
+
+  /** PrimeNG pass-through attributes applied to the Card root for accessibility and styling. */
+  protected readonly cardPassThrough: CardPassThrough = {
+    root: {
+      class: 'article-card',
+      role: 'button',
+      tabindex: '0',
+    },
+  };
 
   /** Emits the selected article id when the card is clicked or activated from the keyboard. */
   readonly articleClick = output<string>();

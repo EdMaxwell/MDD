@@ -1,10 +1,10 @@
 package com.mdd.post.repository;
 
 import com.mdd.post.domain.Post;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -37,5 +37,5 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
                 where user.id = :userId
             )
             """)
-    List<Post> findFeedByUserSubscriptions(@Param("userId") UUID userId, Sort sort);
+    Page<Post> findFeedByUserSubscriptions(@Param("userId") UUID userId, Pageable pageable);
 }

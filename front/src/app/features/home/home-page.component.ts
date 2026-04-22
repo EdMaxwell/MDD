@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { PaginatorModule } from 'primeng/paginator';
+import { PaginatorState } from 'primeng/types/paginator';
 import {
   ArticleFeedItem,
   ArticleFeedService,
@@ -18,11 +20,12 @@ import { UiButtonComponent } from '../../shared/ui/ui-button/ui-button.component
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [CommonModule, TopbarComponent, UiButtonComponent, ArticleCardComponent],
+  imports: [CommonModule, TopbarComponent, UiButtonComponent, ArticleCardComponent, PaginatorModule],
   templateUrl: './home-page.component.html',
   styleUrl: './home-page.component.scss',
 })
 export class HomePageComponent {
+  protected readonly pageSize = 6;
   protected readonly authService = inject(AuthService);
   private readonly articleFeedService = inject(ArticleFeedService);
   private readonly router = inject(Router);
@@ -31,6 +34,8 @@ export class HomePageComponent {
   protected readonly loadingFeed = signal(true);
   protected readonly feedError = signal('');
   protected readonly sortDirection = signal<ArticleSortDirection>('desc');
+  protected readonly currentPage = signal(0);
+  protected readonly totalArticles = signal(0);
 
   constructor() {
     this.authService.init();
@@ -51,6 +56,15 @@ export class HomePageComponent {
    */
   protected toggleSort(): void {
     this.sortDirection.update((direction) => (direction === 'desc' ? 'asc' : 'desc'));
+    this.currentPage.set(0);
+    this.loadFeed();
+  }
+
+  /**
+   * Loads the page selected from the feed paginator.
+   */
+  protected changePage(event: PaginatorState): void {
+    this.currentPage.set(event.page ?? 0);
     this.loadFeed();
   }
 
@@ -75,9 +89,11 @@ export class HomePageComponent {
     this.loadingFeed.set(true);
     this.feedError.set('');
 
-    this.articleFeedService.loadFeed(this.sortDirection()).subscribe({
-      next: (articles) => {
-        this.articles.set(articles);
+    this.articleFeedService.loadFeed(this.sortDirection(), this.currentPage(), this.pageSize).subscribe({
+      next: (page) => {
+        this.articles.set(page.content);
+        this.currentPage.set(page.page);
+        this.totalArticles.set(page.totalElements);
         this.loadingFeed.set(false);
       },
       error: (error: HttpErrorResponse) => {

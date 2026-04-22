@@ -1,0 +1,11 @@
+<button
+  [attr.type]="buttonType()"
+  class="ui-button"
+  [class.ui-button-outline]="variant() === 'outline'"
+  [class.ui-button-primary]="variant() === 'primary'"
+  [class.ui-button-muted]="variant() === 'muted'"
+  [disabled]="disabled()"
+  (click)="buttonClick.emit()"
+>
+  <ng-content />
+</button>

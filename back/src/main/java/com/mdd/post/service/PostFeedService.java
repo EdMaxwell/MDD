@@ -1,10 +1,12 @@
 package com.mdd.post.service;
 
 import com.mdd.auth.domain.User;
+import com.mdd.common.PageResponse;
 import com.mdd.post.domain.Post;
 import com.mdd.post.dto.PostFeedItemResponse;
 import com.mdd.post.repository.PostRepository;
-import java.util.List;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class PostFeedService {
+
+    public static final int DEFAULT_PAGE_SIZE = 6;
+    public static final int MAX_PAGE_SIZE = 6;
 
     private final PostRepository postRepository;
 
@@ -25,14 +30,35 @@ public class PostFeedService {
      *
      * @param user authenticated principal
      * @param sortDirection accepted values are defined by {@link PostSortDirection#from(String)}
-     * @return feed items sorted by creation date
+     * @param page zero-based page index
+     * @param size requested page size, capped at {@value #MAX_PAGE_SIZE}
+     * @return paginated feed items sorted by creation date
      */
     @Transactional(readOnly = true)
-    public List<PostFeedItemResponse> currentUserFeed(User user, String sortDirection) {
+    public PageResponse<PostFeedItemResponse> currentUserFeed(User user, String sortDirection, Integer page, Integer size) {
         PostSortDirection direction = PostSortDirection.from(sortDirection);
-        return postRepository.findFeedByUserSubscriptions(user.getId(), direction.toSort()).stream()
-                .map(this::toFeedItem)
-                .toList();
+        Pageable pageable = PageRequest.of(sanitizePage(page), sanitizeSize(size), direction.toSort());
+
+        return PageResponse.from(postRepository.findFeedByUserSubscriptions(user.getId(), pageable)
+                .map(this::toFeedItem));
+    }
+
+    /**
+     * Keeps invalid page values on the first page instead of returning a request error.
+     */
+    private int sanitizePage(Integer page) {
+        return page == null || page < 0 ? 0 : page;
+    }
+
+    /**
+     * Applies the feed page-size policy so API consumers never receive more than six cards.
+     */
+    private int sanitizeSize(Integer size) {
+        if (size == null || size < 1) {
+            return DEFAULT_PAGE_SIZE;
+        }
+
+        return Math.min(size, MAX_PAGE_SIZE);
     }
 
     /**
