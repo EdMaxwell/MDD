@@ -1,5 +1,8 @@
-import { Component, EventEmitter, Output, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 
+/**
+ * Small reusable button component with project variants and submit support.
+ */
 @Component({
   selector: 'app-ui-button',
   standalone: true,
@@ -54,9 +57,13 @@ import { Component, EventEmitter, Output, input } from '@angular/core';
   ],
 })
 export class UiButtonComponent {
+  /** Visual style variant. */
   readonly variant = input<'primary' | 'outline' | 'muted'>('primary');
+  /** Native button type attribute. */
   readonly buttonType = input<'button' | 'submit'>('button');
+  /** Disabled state forwarded to the native button. */
   readonly disabled = input(false);
 
-  @Output() readonly buttonClick = new EventEmitter<void>();
+  /** Emits when the native button is clicked. */
+  readonly buttonClick = output<void>();
 }

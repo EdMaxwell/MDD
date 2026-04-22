@@ -12,6 +12,9 @@ import { ArticleCardComponent } from '../articles/article-card.component';
 import { TopbarComponent } from '../../shared/ui/topbar.component';
 import { UiButtonComponent } from '../../shared/ui/ui-button.component';
 
+/**
+ * Displays the authenticated user's article feed and feed-level actions.
+ */
 @Component({
   selector: 'app-home-page',
   standalone: true,
@@ -43,19 +46,31 @@ export class HomePageComponent {
     });
   }
 
+  /**
+   * Toggles feed ordering between newest first and oldest first, then reloads the feed.
+   */
   protected toggleSort(): void {
     this.sortDirection.update((direction) => (direction === 'desc' ? 'asc' : 'desc'));
     this.loadFeed();
   }
 
+  /**
+   * Opens the article creation page.
+   */
   protected createArticle(): void {
     this.router.navigateByUrl('/articles/new');
   }
 
+  /**
+   * Opens an article detail page from a selected feed card.
+   */
   protected openArticle(articleId: string): void {
     this.router.navigate(['/articles', articleId]);
   }
 
+  /**
+   * Loads the feed using the current sort direction.
+   */
   private loadFeed(): void {
     this.loadingFeed.set(true);
     this.feedError.set('');
@@ -72,6 +87,9 @@ export class HomePageComponent {
     });
   }
 
+  /**
+   * Maps feed API failures to user-facing messages.
+   */
   private resolveFeedError(error: HttpErrorResponse): string {
     if (error.status === 0) {
       return 'Le backend est inaccessible. Verifie que Spring Boot tourne sur le port 8080.';

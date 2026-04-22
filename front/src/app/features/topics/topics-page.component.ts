@@ -7,6 +7,9 @@ import { TopbarComponent } from '../../shared/ui/topbar.component';
 import { TopicCardComponent } from './topic-card.component';
 import { TopicItem, TopicSubscriptionService } from './topic-subscription.service';
 
+/**
+ * Displays the topic catalog and lets authenticated users subscribe to topics.
+ */
 @Component({
   selector: 'app-topics-page',
   standalone: true,
@@ -38,10 +41,16 @@ export class TopicsPageComponent {
     });
   }
 
+  /**
+   * Checks whether a subscription request is already running for a topic.
+   */
   protected isUpdating(topicId: string): boolean {
     return this.updatingTopicIds().has(topicId);
   }
 
+  /**
+   * Subscribes to a topic unless the card is already subscribed or being updated.
+   */
   protected subscribe(topicId: string): void {
     const topic = this.topics().find((item) => item.id === topicId);
     if (!topic || topic.subscribed || this.isUpdating(topicId)) {
@@ -62,6 +71,9 @@ export class TopicsPageComponent {
     });
   }
 
+  /**
+   * Loads the topic catalog for the authenticated user.
+   */
   private loadTopics(): void {
     this.loadingTopics.set(true);
     this.topicsError.set('');
@@ -78,12 +90,18 @@ export class TopicsPageComponent {
     });
   }
 
+  /**
+   * Replaces one topic in the local list after the backend returns the updated state.
+   */
   private replaceTopic(updatedTopic: TopicItem): void {
     this.topics.update((topics) =>
       topics.map((topic) => (topic.id === updatedTopic.id ? updatedTopic : topic)),
     );
   }
 
+  /**
+   * Tracks in-flight topic updates without mutating the existing signal value.
+   */
   private trackUpdating(topicId: string, updating: boolean): void {
     this.updatingTopicIds.update((topicIds) => {
       const nextTopicIds = new Set(topicIds);
@@ -96,6 +114,9 @@ export class TopicsPageComponent {
     });
   }
 
+  /**
+   * Maps topic API failures to user-facing messages.
+   */
   private resolveTopicsError(error: HttpErrorResponse): string {
     if (error.status === 0) {
       return 'Le backend est inaccessible. Verifie que Spring Boot tourne sur le port 8080.';

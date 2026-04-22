@@ -12,6 +12,9 @@ import { UiButtonComponent } from '../../shared/ui/ui-button.component';
 
 type AuthScreen = 'landing' | 'login' | 'register';
 
+/**
+ * Handles the landing, login and registration screens from route data.
+ */
 @Component({
   selector: 'app-auth-page',
   standalone: true,
@@ -72,14 +75,28 @@ export class AuthPageComponent {
     });
   }
 
+  /**
+   * Switches to one of the authentication screens by navigating to its route.
+   *
+   * @param screen target authentication screen
+   */
   protected navigateTo(screen: AuthScreen): void {
     this.router.navigateByUrl(`/${screen}`);
   }
 
+  /**
+   * Returns to the unauthenticated landing route.
+   */
   protected backToHome(): void {
     this.router.navigateByUrl('/');
   }
 
+  /**
+   * Reconfigures form validators for the active screen.
+   *
+   * <p>The login form accepts either username or email in the email field, while registration
+   * requires a valid email and a display name.</p>
+   */
   protected prepareFormForCurrentScreen(): void {
     this.errorMessage.set('');
 
@@ -99,6 +116,9 @@ export class AuthPageComponent {
     emailControl.updateValueAndValidity();
   }
 
+  /**
+   * Submits either login or registration depending on the active route data.
+   */
   protected submit(): void {
     this.prepareFormForCurrentScreen();
     this.errorMessage.set('');
@@ -136,16 +156,25 @@ export class AuthPageComponent {
     });
   }
 
+  /**
+   * Logs out from the topbar action and returns to the landing screen.
+   */
   protected logout(): void {
     this.authService.logout();
     this.router.navigateByUrl('/');
   }
 
+  /**
+   * Checks whether a form control should display a validation error.
+   */
   protected hasError(controlName: 'name' | 'email' | 'password', errorCode: string): boolean {
     const control = this.form.controls[controlName];
     return control.touched && control.hasError(errorCode);
   }
 
+  /**
+   * Maps backend and network errors to user-facing messages.
+   */
   private resolveErrorMessage(error: HttpErrorResponse): string {
     if (error.error?.message) {
       return error.error.message;

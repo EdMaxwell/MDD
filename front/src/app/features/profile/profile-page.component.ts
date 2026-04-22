@@ -14,6 +14,9 @@ import { TopicSubscriptionService } from '../topics/topic-subscription.service';
 
 const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 
+/**
+ * Displays and updates the authenticated user's profile and subscriptions.
+ */
 @Component({
   selector: 'app-profile-page',
   standalone: true,
@@ -55,6 +58,9 @@ export class ProfilePageComponent {
     });
   }
 
+  /**
+   * Saves profile changes and keeps an empty password as "do not change password".
+   */
   protected submit(): void {
     this.successMessage.set('');
     this.saveError.set('');
@@ -94,15 +100,24 @@ export class ProfilePageComponent {
     });
   }
 
+  /**
+   * Logs out from the profile action and returns to the landing route.
+   */
   protected logout(): void {
     this.authService.logout();
     this.router.navigateByUrl('/');
   }
 
+  /**
+   * Checks whether an unsubscribe request is already running for a topic.
+   */
   protected isUnsubscribing(topicId: string): boolean {
     return this.updatingSubscriptionIds().has(topicId);
   }
 
+  /**
+   * Removes a topic from the user's subscriptions and updates the profile locally.
+   */
   protected unsubscribe(topicId: string): void {
     const currentProfile = this.profile();
     if (!currentProfile || this.isUnsubscribing(topicId)) {
@@ -135,11 +150,17 @@ export class ProfilePageComponent {
     });
   }
 
+  /**
+   * Checks whether a form control should display a validation error.
+   */
   protected hasError(controlName: 'email' | 'name' | 'password', errorCode: string): boolean {
     const control = this.form.controls[controlName];
     return control.touched && control.hasError(errorCode);
   }
 
+  /**
+   * Loads the profile and hydrates the form with the returned data.
+   */
   private loadProfile(): void {
     this.loadingProfile.set(true);
     this.profileError.set('');
@@ -162,6 +183,9 @@ export class ProfilePageComponent {
     });
   }
 
+  /**
+   * Maps profile-loading failures to user-facing messages.
+   */
   private resolveProfileError(error: HttpErrorResponse): string {
     if (error.status === 0) {
       return 'Le backend est inaccessible. Verifie que Spring Boot tourne sur le port 8080.';
@@ -174,6 +198,9 @@ export class ProfilePageComponent {
     return 'Impossible de charger le profil pour le moment.';
   }
 
+  /**
+   * Maps profile-update failures, including backend validation details, to user-facing messages.
+   */
   private resolveUpdateError(error: HttpErrorResponse): string {
     if (error.status === 0) {
       return 'Le backend est inaccessible. Verifie que Spring Boot tourne sur le port 8080.';
@@ -197,6 +224,9 @@ export class ProfilePageComponent {
     return 'Impossible de mettre a jour le profil pour le moment.';
   }
 
+  /**
+   * Tracks in-flight subscription updates without mutating the existing signal value.
+   */
   private trackSubscriptionUpdate(topicId: string, updating: boolean): void {
     this.updatingSubscriptionIds.update((topicIds) => {
       const nextTopicIds = new Set(topicIds);
@@ -209,6 +239,9 @@ export class ProfilePageComponent {
     });
   }
 
+  /**
+   * Maps unsubscribe failures to user-facing messages.
+   */
   private resolveUnsubscribeError(error: HttpErrorResponse): string {
     if (error.status === 0) {
       return 'Le backend est inaccessible. Verifie que Spring Boot tourne sur le port 8080.';

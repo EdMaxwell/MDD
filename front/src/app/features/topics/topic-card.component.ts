@@ -2,6 +2,9 @@ import { Component, input, output } from '@angular/core';
 import { UiButtonComponent } from '../../shared/ui/ui-button.component';
 import { TopicItem } from './topic-subscription.service';
 
+/**
+ * Displays one topic and emits subscribe requests from the catalog page.
+ */
 @Component({
   selector: 'app-topic-card',
   standalone: true,
@@ -76,7 +79,10 @@ import { TopicItem } from './topic-subscription.service';
   ],
 })
 export class TopicCardComponent {
+  /** Topic data rendered by the card. */
   readonly topic = input.required<TopicItem>();
+  /** Whether a subscription request is running for this card. */
   readonly loading = input(false);
+  /** Emits the selected topic id when the user requests a subscription. */
   readonly subscribe = output<string>();
 }
