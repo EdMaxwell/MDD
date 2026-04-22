@@ -71,10 +71,6 @@
           <div class="section-divider"></div>
           <h2>Abonnements</h2>
 
-          @if (subscriptionError()) {
-            <p class="subscription-feedback">{{ subscriptionError() }}</p>
-          }
-
           @if (profile.subscriptions.length) {
             <div class="subscription-grid">
               @for (subscription of profile.subscriptions; track subscription.id) {
@@ -84,7 +80,7 @@
                     Description:
                     {{
                       subscription.description ||
-                      "Aucune description disponible pour le moment."
+                        "Aucune description disponible pour le moment."
                     }}
                   </p>
                   <button
@@ -93,7 +89,7 @@
                     [disabled]="isUnsubscribing(subscription.id)"
                     (click)="unsubscribe(subscription.id)"
                   >
-                    {{ isUnsubscribing(subscription.id) ? 'Desabonnement...' : 'Se desabonner' }}
+                    {{ isUnsubscribing(subscription.id) ? 'Suppression...' : 'Se desabonner' }}
                   </button>
                 </article>
               }
