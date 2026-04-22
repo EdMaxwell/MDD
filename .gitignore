@@ -16,5 +16,3 @@ yarn-error.log*
 # Backend (Maven / Spring Boot)
 back/target/
 
-# Environment files
-.env
