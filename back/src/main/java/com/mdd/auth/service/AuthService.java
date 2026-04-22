@@ -72,14 +72,15 @@ public class AuthService {
     /**
      * Authenticates the submitted credentials through Spring Security.
      *
-     * @param request login credentials validated by the controller
+     * @param request login credentials validated by the controller; the email field accepts email or username
      * @param servletRequest current request, forwarded to refresh-token creation for device metadata
      * @return access token, raw refresh token and public user data
      */
     public AuthResponse login(LoginRequest request, HttpServletRequest servletRequest) {
         try {
+            String loginIdentifier = request.email().trim().toLowerCase();
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.email().trim().toLowerCase(), request.password())
+                    new UsernamePasswordAuthenticationToken(loginIdentifier, request.password())
             );
             User user = (User) authentication.getPrincipal();
             return buildAuthResponse(user, servletRequest);

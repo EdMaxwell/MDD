@@ -55,11 +55,11 @@ class AuthServiceTest {
 
     @Test
     void registerShouldCreateUserAndReturnToken() {
-        RegisterRequest request = new RegisterRequest("Alice", "Alice@Example.com", "password123");
+        RegisterRequest request = new RegisterRequest("Alice", "Alice@Example.com", "Password1!");
         User savedUser = new User("Alice", "alice@example.com", "hashed-password");
 
         when(userRepository.existsByEmailIgnoreCase("alice@example.com")).thenReturn(false);
-        when(passwordEncoder.encode("password123")).thenReturn("hashed-password");
+        when(passwordEncoder.encode("Password1!")).thenReturn("hashed-password");
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
         when(jwtService.generateToken(savedUser)).thenReturn("jwt-token");
         when(refreshTokenService.createFor(savedUser, null)).thenReturn("refresh-token");
@@ -78,7 +78,7 @@ class AuthServiceTest {
 
     @Test
     void registerShouldRejectDuplicateEmail() {
-        RegisterRequest request = new RegisterRequest("Alice", "alice@example.com", "password123");
+        RegisterRequest request = new RegisterRequest("Alice", "alice@example.com", "Password1!");
         when(userRepository.existsByEmailIgnoreCase("alice@example.com")).thenReturn(true);
 
         assertThatThrownBy(() -> authService.register(request, null))
@@ -88,7 +88,7 @@ class AuthServiceTest {
     @Test
     void loginShouldReturnTokenForValidCredentials() {
         User user = new User("Alice", "alice@example.com", "hashed-password");
-        LoginRequest request = new LoginRequest("alice@example.com", "password123");
+        LoginRequest request = new LoginRequest("Alice", "password123");
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
 
@@ -98,6 +98,11 @@ class AuthServiceTest {
 
         var response = authService.login(request, null);
 
+        ArgumentCaptor<UsernamePasswordAuthenticationToken> authenticationCaptor =
+                ArgumentCaptor.forClass(UsernamePasswordAuthenticationToken.class);
+        verify(authenticationManager).authenticate(authenticationCaptor.capture());
+
+        assertThat(authenticationCaptor.getValue().getPrincipal()).isEqualTo("alice");
         assertThat(response.token()).isEqualTo("jwt-token");
         assertThat(response.refreshToken()).isEqualTo("refresh-token");
         assertThat(response.user().email()).isEqualTo("alice@example.com");

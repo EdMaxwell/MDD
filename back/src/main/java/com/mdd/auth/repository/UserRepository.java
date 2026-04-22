@@ -22,9 +22,14 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     boolean existsByEmailIgnoreCaseAndIdNot(String email, UUID id);
 
     /**
-     * Loads a user by email for authentication.
+     * Loads a user by email for JWT validation.
      */
     Optional<User> findByEmailIgnoreCase(String email);
+
+    /**
+     * Loads a user by email or username for login.
+     */
+    Optional<User> findByEmailIgnoreCaseOrNameIgnoreCase(String email, String name);
 
     /**
      * Loads a user with subscriptions eagerly for profile and topic operations.
