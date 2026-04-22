@@ -24,6 +24,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Exposes authentication endpoints and keeps refresh tokens in HttpOnly cookies.
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -36,6 +39,17 @@ public class AuthController {
         this.jwtProperties = jwtProperties;
     }
 
+    /**
+     * Registers a new user and starts a session immediately.
+     *
+     * <p>The refresh token returned by the service is moved to an HttpOnly cookie
+     * before the response body is sent, so JavaScript clients never handle it directly.</p>
+     *
+     * @param request validated registration payload
+     * @param servletRequest current HTTP request, used to describe the refresh-token device
+     * @param servletResponse current HTTP response, used to append the refresh cookie
+     * @return authentication response without the raw refresh token in the JSON body
+     */
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public AuthResponse register(
@@ -48,6 +62,14 @@ public class AuthController {
         return response.withoutRefreshToken();
     }
 
+    /**
+     * Authenticates an existing user and creates a new refresh-token session.
+     *
+     * @param request validated login credentials
+     * @param servletRequest current HTTP request, used to describe the refresh-token device
+     * @param servletResponse current HTTP response, used to append the refresh cookie
+     * @return authentication response without the raw refresh token in the JSON body
+     */
     @PostMapping("/login")
     public AuthResponse login(
             @Valid @RequestBody LoginRequest request,
@@ -59,6 +81,17 @@ public class AuthController {
         return response.withoutRefreshToken();
     }
 
+    /**
+     * Rotates the current refresh token and issues a new access token.
+     *
+     * <p>The HttpOnly cookie is the preferred source. The optional body remains as a
+     * compatibility fallback for clients that cannot send cookies.</p>
+     *
+     * @param request optional refresh-token body fallback
+     * @param servletRequest current HTTP request, used to read the refresh cookie
+     * @param servletResponse current HTTP response, used to replace the refresh cookie
+     * @return authentication response with a fresh access token and no refresh token in the body
+     */
     @PostMapping("/refresh")
     public AuthResponse refresh(
             @RequestBody(required = false) RefreshTokenRequest request,
@@ -70,6 +103,13 @@ public class AuthController {
         return response.withoutRefreshToken();
     }
 
+    /**
+     * Revokes the current refresh token and clears the browser cookie.
+     *
+     * @param request optional refresh-token body fallback
+     * @param servletRequest current HTTP request, used to read the refresh cookie
+     * @param servletResponse current HTTP response, used to expire the refresh cookie
+     */
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void logout(
@@ -81,11 +121,23 @@ public class AuthController {
         clearRefreshCookie(servletResponse);
     }
 
+    /**
+     * Returns the user currently authenticated by the access token.
+     *
+     * @param user principal resolved by Spring Security
+     * @return public user data
+     */
     @GetMapping("/me")
     public UserResponse me(@AuthenticationPrincipal User user) {
         return authService.currentUser(user);
     }
 
+    /**
+     * Resolves the refresh token from the safest available source.
+     *
+     * <p>Cookies win over request bodies because the normal browser flow stores the
+     * token as HttpOnly, which reduces accidental token exposure to JavaScript.</p>
+     */
     private String resolveRefreshToken(RefreshTokenRequest request, HttpServletRequest servletRequest) {
         String cookieToken = refreshCookieValue(servletRequest);
         if (cookieToken != null && !cookieToken.isBlank()) {
@@ -94,6 +146,9 @@ public class AuthController {
         return request == null ? null : request.refreshToken();
     }
 
+    /**
+     * Finds the refresh-token cookie value if the request carries it.
+     */
     private String refreshCookieValue(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
@@ -107,16 +162,25 @@ public class AuthController {
         return null;
     }
 
+    /**
+     * Adds a refresh cookie with the same lifetime as the persisted refresh token.
+     */
     private void setRefreshCookie(HttpServletResponse response, String refreshToken) {
         ResponseCookie cookie = refreshCookie(refreshToken, Duration.ofMillis(jwtProperties.refreshExpiration()));
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
+    /**
+     * Expires the refresh cookie on the client.
+     */
     private void clearRefreshCookie(HttpServletResponse response) {
         ResponseCookie cookie = refreshCookie("", Duration.ZERO);
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
+    /**
+     * Builds the refresh cookie with security attributes configured for the current environment.
+     */
     private ResponseCookie refreshCookie(String value, Duration maxAge) {
         return ResponseCookie.from(jwtProperties.refreshCookieName(), value)
                 .httpOnly(true)

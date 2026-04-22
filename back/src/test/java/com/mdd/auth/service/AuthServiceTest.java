@@ -25,6 +25,9 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+/**
+ * Unit tests for authentication registration, login and refresh workflows.
+ */
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 

@@ -10,11 +10,22 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/**
+ * Persistence access for posts and feed queries.
+ */
 public interface PostRepository extends JpaRepository<Post, UUID> {
 
+    /**
+     * Loads a post with author and topic to safely map API responses inside a transaction.
+     */
     @EntityGraph(attributePaths = {"author", "topic"})
     Optional<Post> findWithAuthorAndTopicById(UUID id);
 
+    /**
+     * Returns posts whose topics are followed by the given user.
+     *
+     * <p>The entity graph prevents N+1 queries while mapping author and topic names.</p>
+     */
     @EntityGraph(attributePaths = {"author", "topic"})
     @Query("""
             select post

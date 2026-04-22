@@ -14,6 +14,9 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * Comment written by a user on a post.
+ */
 @Entity
 @Table(name = "comments")
 public class Comment {
@@ -42,6 +45,9 @@ public class Comment {
     protected Comment() {
     }
 
+    /**
+     * Creates a comment with backend-controlled timestamps.
+     */
     public Comment(Post post, User author, String content, Instant createdAt) {
         this.post = post;
         this.author = author;
@@ -82,11 +88,13 @@ public class Comment {
         if (!(object instanceof Comment comment)) {
             return false;
         }
-        return Objects.equals(id, comment.id);
+        // Generated ids are null before persistence, so transient entities must not compare equal.
+        return id != null && Objects.equals(id, comment.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        // Keep the hash stable while Hibernate assigns the generated id.
+        return getClass().hashCode();
     }
 }

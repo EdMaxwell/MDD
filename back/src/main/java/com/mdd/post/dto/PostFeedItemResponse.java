@@ -3,6 +3,9 @@ package com.mdd.post.dto;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Compact article representation used by the authenticated feed.
+ */
 public record PostFeedItemResponse(
         UUID id,
         String title,

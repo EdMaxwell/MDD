@@ -21,6 +21,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+/**
+ * Unit tests for topic listing and subscription changes.
+ */
 @ExtendWith(MockitoExtension.class)
 class TopicSubscriptionServiceTest {
 

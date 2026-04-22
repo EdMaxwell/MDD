@@ -21,6 +21,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+/**
+ * Application user used both as a JPA aggregate root and Spring Security principal.
+ */
 @Entity
 @Table(name = "users")
 public class User implements UserDetails {
@@ -49,6 +52,9 @@ public class User implements UserDetails {
     protected User() {
     }
 
+    /**
+     * Creates a new user aggregate before persistence assigns its identifier.
+     */
     public User(String name, String email, String password) {
         this.name = name;
         this.email = email;
@@ -81,11 +87,17 @@ public class User implements UserDetails {
         return email;
     }
 
+    /**
+     * Updates the editable profile fields.
+     */
     public void updateProfile(String name, String email) {
         this.name = name;
         this.email = email;
     }
 
+    /**
+     * Replaces the stored password hash.
+     */
     public void updatePassword(String password) {
         this.password = password;
     }
@@ -123,11 +135,13 @@ public class User implements UserDetails {
         if (!(object instanceof User user)) {
             return false;
         }
-        return Objects.equals(id, user.id);
+        // Generated ids are null before persistence, so transient entities must not compare equal.
+        return id != null && Objects.equals(id, user.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        // Keep the hash stable while Hibernate assigns the generated id.
+        return getClass().hashCode();
     }
 }

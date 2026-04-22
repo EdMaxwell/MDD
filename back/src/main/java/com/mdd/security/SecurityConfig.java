@@ -1,5 +1,6 @@
 package com.mdd.security;
 
+import java.util.List;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,8 +23,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
-
+/**
+ * Configures stateless API security, password hashing, authentication and CORS.
+ */
 @Configuration
 @EnableMethodSecurity
 @EnableConfigurationProperties(JwtProperties.class)
@@ -37,6 +39,12 @@ public class SecurityConfig {
         this.userDetailsService = userDetailsService;
     }
 
+    /**
+     * Defines the stateless API security chain.
+     *
+     * <p>Only authentication endpoints and the framework error endpoint are public;
+     * every business endpoint requires a valid access token.</p>
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -55,6 +63,9 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Authenticates users from the database with BCrypt password hashes.
+     */
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
@@ -62,16 +73,25 @@ public class SecurityConfig {
         return provider;
     }
 
+    /**
+     * Provides the password hashing strategy used for registration and profile updates.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Exposes Spring Security's authentication manager for the login service.
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
 
+    /**
+     * Allows the Angular development origin to call the API with credentials.
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

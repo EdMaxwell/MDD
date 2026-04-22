@@ -1,5 +1,8 @@
 package com.mdd.auth.dto;
 
+/**
+ * Authentication payload returned after login, registration or token refresh.
+ */
 public record AuthResponse(
         String token,
         String refreshToken,

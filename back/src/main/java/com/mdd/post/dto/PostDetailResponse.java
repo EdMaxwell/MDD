@@ -4,6 +4,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Complete article representation, including author, topic and comments.
+ */
 public record PostDetailResponse(
         UUID id,
         String title,

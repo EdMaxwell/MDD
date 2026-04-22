@@ -2,6 +2,9 @@ package com.mdd.topic.exception;
 
 import java.util.UUID;
 
+/**
+ * Raised when a topic cannot be found.
+ */
 public class TopicNotFoundException extends RuntimeException {
 
     public TopicNotFoundException(UUID topicId) {

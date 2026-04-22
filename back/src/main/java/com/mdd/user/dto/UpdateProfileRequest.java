@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Payload used by a user to update their profile details.
+ */
 public record UpdateProfileRequest(
         @NotBlank(message = "Name is required")
         @Size(min = 2, max = 100, message = "Name must contain between 2 and 100 characters")

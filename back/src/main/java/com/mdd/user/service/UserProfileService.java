@@ -14,6 +14,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Reads and updates the authenticated user's profile and subscriptions.
+ */
 @Service
 public class UserProfileService {
 
@@ -25,18 +28,30 @@ public class UserProfileService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Returns the authenticated user's profile with subscriptions sorted for display.
+     *
+     * @param authenticatedUser principal resolved by Spring Security
+     * @return profile response
+     */
     @Transactional(readOnly = true)
     public UserProfileResponse currentProfile(User authenticatedUser) {
-        User user = userRepository.findWithSubscriptionsById(authenticatedUser.getId())
-                .orElseThrow(() -> new UserNotFoundException(authenticatedUser.getId()));
-
-        return toProfileResponse(user);
+        return toProfileResponse(findUserWithSubscriptions(authenticatedUser));
     }
 
+    /**
+     * Updates profile fields and optionally replaces the password.
+     *
+     * <p>An empty password means "keep the current password", which matches the profile
+     * form behavior and avoids accidentally hashing an empty value.</p>
+     *
+     * @param authenticatedUser principal resolved by Spring Security
+     * @param request validated profile update payload
+     * @return updated profile response
+     */
     @Transactional
     public UserProfileResponse updateProfile(User authenticatedUser, UpdateProfileRequest request) {
-        User user = userRepository.findWithSubscriptionsById(authenticatedUser.getId())
-                .orElseThrow(() -> new UserNotFoundException(authenticatedUser.getId()));
+        User user = findUserWithSubscriptions(authenticatedUser);
 
         String normalizedEmail = request.email().trim().toLowerCase();
         if (userRepository.existsByEmailIgnoreCaseAndIdNot(normalizedEmail, user.getId())) {
@@ -53,6 +68,17 @@ public class UserProfileService {
         return toProfileResponse(userRepository.save(user));
     }
 
+    /**
+     * Reloads the principal with subscriptions to build a complete profile response.
+     */
+    private User findUserWithSubscriptions(User authenticatedUser) {
+        return userRepository.findWithSubscriptionsById(authenticatedUser.getId())
+                .orElseThrow(() -> new UserNotFoundException(authenticatedUser.getId()));
+    }
+
+    /**
+     * Maps the user entity to the profile API contract and sorts subscriptions by topic name.
+     */
     private UserProfileResponse toProfileResponse(User user) {
         List<SubscriptionResponse> subscriptions = user.getSubscriptions().stream()
                 .sorted(Comparator.comparing(Topic::getName, String.CASE_INSENSITIVE_ORDER))
@@ -67,6 +93,9 @@ public class UserProfileService {
         );
     }
 
+    /**
+     * Maps a subscribed topic to the profile subscription API contract.
+     */
     private SubscriptionResponse toSubscriptionResponse(Topic topic) {
         return new SubscriptionResponse(topic.getId(), topic.getName(), topic.getDescription());
     }

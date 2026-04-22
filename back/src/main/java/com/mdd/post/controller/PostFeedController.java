@@ -22,6 +22,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Exposes authenticated post feed, post creation, detail and comment endpoints.
+ */
 @RestController
 @RequestMapping("/api/posts")
 public class PostFeedController {
@@ -34,6 +37,13 @@ public class PostFeedController {
         this.postService = postService;
     }
 
+    /**
+     * Creates an article for the authenticated user.
+     *
+     * @param user principal resolved from the access token
+     * @param request validated article creation payload
+     * @return created article detail
+     */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PostDetailResponse create(
@@ -43,6 +53,13 @@ public class PostFeedController {
         return postService.create(user, request);
     }
 
+    /**
+     * Returns the authenticated user's feed from followed topics.
+     *
+     * @param user principal resolved from the access token
+     * @param sort requested creation-date order
+     * @return feed items
+     */
     @GetMapping("/feed")
     public List<PostFeedItemResponse> feed(
             @AuthenticationPrincipal User user,
@@ -51,11 +68,25 @@ public class PostFeedController {
         return postFeedService.currentUserFeed(user, sort);
     }
 
+    /**
+     * Returns the detail of one article.
+     *
+     * @param postId article identifier from the route
+     * @return article detail including comments
+     */
     @GetMapping("/{postId}")
     public PostDetailResponse detail(@PathVariable UUID postId) {
         return postService.findById(postId);
     }
 
+    /**
+     * Adds a comment to an article for the authenticated user.
+     *
+     * @param user principal resolved from the access token
+     * @param postId article identifier from the route
+     * @param request validated comment payload
+     * @return created comment
+     */
     @PostMapping("/{postId}/comments")
     @ResponseStatus(HttpStatus.CREATED)
     public CommentResponse comment(

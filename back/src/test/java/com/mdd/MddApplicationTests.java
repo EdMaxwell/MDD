@@ -3,6 +3,9 @@ package com.mdd;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+/**
+ * Verifies that the Spring application context loads with the test database configuration.
+ */
 @SpringBootTest(properties = {
 		"spring.datasource.url=jdbc:h2:mem:mdd-test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
 		"spring.datasource.driver-class-name=org.h2.Driver",
