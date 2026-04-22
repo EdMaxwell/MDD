@@ -20,6 +20,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Coordinates registration, login, token refresh and current-user mapping.
+ */
 @Service
 public class AuthService {
 
@@ -43,6 +46,13 @@ public class AuthService {
         this.refreshTokenService = refreshTokenService;
     }
 
+    /**
+     * Creates a user account, normalizes the email and immediately returns session tokens.
+     *
+     * @param request registration data validated by the controller
+     * @param servletRequest current request, forwarded to refresh-token creation for device metadata
+     * @return access token, raw refresh token and public user data
+     */
     @Transactional
     public AuthResponse register(RegisterRequest request, HttpServletRequest servletRequest) {
         String normalizedEmail = request.email().trim().toLowerCase();
@@ -59,6 +69,13 @@ public class AuthService {
         return buildAuthResponse(savedUser, servletRequest);
     }
 
+    /**
+     * Authenticates the submitted credentials through Spring Security.
+     *
+     * @param request login credentials validated by the controller
+     * @param servletRequest current request, forwarded to refresh-token creation for device metadata
+     * @return access token, raw refresh token and public user data
+     */
     public AuthResponse login(LoginRequest request, HttpServletRequest servletRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
@@ -71,10 +88,24 @@ public class AuthService {
         }
     }
 
+    /**
+     * Rotates a refresh token coming from the legacy request body contract.
+     *
+     * @param request refresh-token payload
+     * @param servletRequest current request, forwarded to refresh-token creation for device metadata
+     * @return a fresh access token and replacement refresh token
+     */
     public AuthResponse refresh(RefreshTokenRequest request, HttpServletRequest servletRequest) {
         return refresh(request.refreshToken(), servletRequest);
     }
 
+    /**
+     * Rotates a raw refresh token and issues a new access token for the same user.
+     *
+     * @param rawRefreshToken raw refresh token from the cookie or compatibility body
+     * @param servletRequest current request, forwarded to refresh-token creation for device metadata
+     * @return a fresh access token and replacement refresh token
+     */
     public AuthResponse refresh(String rawRefreshToken, HttpServletRequest servletRequest) {
         if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
             throw new InvalidRefreshTokenException();
@@ -84,10 +115,23 @@ public class AuthService {
         return new AuthResponse(accessToken, rotation.refreshToken(), toUserResponse(rotation.user()));
     }
 
+    /**
+     * Revokes a refresh token coming from the legacy request body contract.
+     *
+     * @param request refresh-token payload
+     */
     public void logout(RefreshTokenRequest request) {
         refreshTokenService.revoke(request.refreshToken());
     }
 
+    /**
+     * Revokes a raw refresh token when it is known and ignores invalid tokens for logout.
+     *
+     * <p>Logout is intentionally idempotent: the client must be able to clear its
+     * local cookie even if the server-side token was already removed or expired.</p>
+     *
+     * @param rawRefreshToken raw refresh token from the cookie or compatibility body
+     */
     public void logout(String rawRefreshToken) {
         if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
             return;
@@ -99,16 +143,28 @@ public class AuthService {
         }
     }
 
+    /**
+     * Maps the authenticated principal to the public user DTO.
+     *
+     * @param user authenticated principal
+     * @return public user data
+     */
     public UserResponse currentUser(User user) {
         return toUserResponse(user);
     }
 
+    /**
+     * Generates both access and refresh tokens for an authenticated user.
+     */
     private AuthResponse buildAuthResponse(User user, HttpServletRequest request) {
         String token = jwtService.generateToken(user);
         String refreshToken = refreshTokenService.createFor(user, request);
         return new AuthResponse(token, refreshToken, toUserResponse(user));
     }
 
+    /**
+     * Keeps the API response independent from the JPA entity and Spring Security principal.
+     */
     private UserResponse toUserResponse(User user) {
         return new UserResponse(user.getId(), user.getName(), user.getEmail());
     }

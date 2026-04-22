@@ -22,6 +22,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+/**
+ * Unit tests for profile reading and profile updates.
+ */
 @ExtendWith(MockitoExtension.class)
 class UserProfileServiceTest {
 

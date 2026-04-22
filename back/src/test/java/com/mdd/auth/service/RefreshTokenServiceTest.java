@@ -12,18 +12,27 @@ import com.mdd.auth.repository.RefreshTokenRepository;
 import com.mdd.security.JwtProperties;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
+/**
+ * Unit tests for refresh-token rotation and suspicious reuse handling.
+ */
 @ExtendWith(MockitoExtension.class)
 class RefreshTokenServiceTest {
+
+    private static final Instant NOW = Instant.parse("2026-04-22T08:00:00Z");
 
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
@@ -40,15 +49,20 @@ class RefreshTokenServiceTest {
                 false,
                 "Lax"
         );
-        refreshTokenService = new RefreshTokenService(refreshTokenRepository, jwtProperties);
+        refreshTokenService = new RefreshTokenService(
+                refreshTokenRepository,
+                jwtProperties,
+                Clock.fixed(NOW, ZoneOffset.UTC)
+        );
     }
 
     @Test
     void rotateShouldDetectRevokedRefreshTokenReuseAndRevokeActiveUserTokens() throws Exception {
         User user = new User("Alice", "alice@example.com", "hashed-password");
-        RefreshToken reusedToken = new RefreshToken(user, hash("reused-token"), Instant.now().plusSeconds(60), null, null);
-        reusedToken.revoke();
-        RefreshToken activeToken = new RefreshToken(user, hash("active-token"), Instant.now().plusSeconds(60), null, null);
+        ReflectionTestUtils.setField(user, "id", UUID.fromString("00000000-0000-0000-0000-000000000001"));
+        RefreshToken reusedToken = new RefreshToken(user, hash("reused-token"), NOW.plusSeconds(60), null, null, NOW);
+        reusedToken.revoke(NOW.plusSeconds(1));
+        RefreshToken activeToken = new RefreshToken(user, hash("active-token"), NOW.plusSeconds(60), null, null, NOW);
 
         when(refreshTokenRepository.findByTokenHash(hash("reused-token"))).thenReturn(Optional.of(reusedToken));
         when(refreshTokenRepository.findAllByUserAndRevokedAtIsNull(user)).thenReturn(List.of(activeToken));

@@ -15,6 +15,9 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+/**
+ * Authenticates requests that carry a valid Bearer access token.
+ */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -26,6 +29,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.userDetailsService = userDetailsService;
     }
 
+    /**
+     * Reads a Bearer token, validates it and installs the authenticated user in the security context.
+     *
+     * <p>Invalid tokens clear the context and the request continues unauthenticated, allowing
+     * Spring Security's authorization rules to produce the final 401/403 response.</p>
+     */
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -44,6 +53,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 if (jwtService.isTokenValid(token, userDetails)) {
+                    // The JWT is only a transport credential. The principal is reloaded
+                    // from the database so controllers receive the current user state.
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
@@ -54,6 +65,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (JwtException | IllegalArgumentException ignored) {
+            // Malformed, expired or tampered tokens must not leak parsing details.
             SecurityContextHolder.clearContext();
         }
 

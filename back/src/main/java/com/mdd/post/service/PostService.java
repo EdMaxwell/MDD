@@ -22,6 +22,9 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Handles article creation, detail retrieval and comment creation.
+ */
 @Service
 public class PostService {
 
@@ -45,6 +48,16 @@ public class PostService {
         this.clock = clock;
     }
 
+    /**
+     * Creates an article for the authenticated user in the requested topic.
+     *
+     * <p>The author and creation date are controlled by the backend. The client only
+     * provides the topic, title and content.</p>
+     *
+     * @param authenticatedUser principal resolved by Spring Security
+     * @param request validated article creation payload
+     * @return newly created article detail without comments
+     */
     @Transactional
     public PostDetailResponse create(User authenticatedUser, CreatePostRequest request) {
         User author = findUser(authenticatedUser);
@@ -57,6 +70,12 @@ public class PostService {
         return toDetailResponse(post, List.of());
     }
 
+    /**
+     * Loads an article detail with its comments ordered from oldest to newest.
+     *
+     * @param postId article identifier from the route
+     * @return article detail response including comments
+     */
     @Transactional(readOnly = true)
     public PostDetailResponse findById(UUID postId) {
         Post post = postRepository.findWithAuthorAndTopicById(postId)
@@ -68,6 +87,14 @@ public class PostService {
         return toDetailResponse(post, comments);
     }
 
+    /**
+     * Adds a comment to an existing article using the authenticated user as author.
+     *
+     * @param authenticatedUser principal resolved by Spring Security
+     * @param postId article identifier from the route
+     * @param request validated comment payload
+     * @return created comment response
+     */
     @Transactional
     public CommentResponse addComment(User authenticatedUser, UUID postId, CreateCommentRequest request) {
         User author = findUser(authenticatedUser);
@@ -80,11 +107,17 @@ public class PostService {
         return toCommentResponse(comment);
     }
 
+    /**
+     * Reloads the authenticated user from persistence before attaching it to new entities.
+     */
     private User findUser(User authenticatedUser) {
         return userRepository.findById(authenticatedUser.getId())
                 .orElseThrow(() -> new UserNotFoundException(authenticatedUser.getId()));
     }
 
+    /**
+     * Maps a post and its already mapped comments to the public API contract.
+     */
     private PostDetailResponse toDetailResponse(Post post, List<CommentResponse> comments) {
         return new PostDetailResponse(
                 post.getId(),
@@ -99,6 +132,9 @@ public class PostService {
         );
     }
 
+    /**
+     * Maps a comment entity to the public API contract.
+     */
     private CommentResponse toCommentResponse(Comment comment) {
         return new CommentResponse(
                 comment.getId(),

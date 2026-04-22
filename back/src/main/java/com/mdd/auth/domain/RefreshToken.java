@@ -12,6 +12,9 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Stores a hashed refresh token and its revocation metadata for one user session.
+ */
 @Entity
 @Table(name = "refresh_tokens")
 public class RefreshToken {
@@ -48,34 +51,59 @@ public class RefreshToken {
     protected RefreshToken() {
     }
 
-    public RefreshToken(User user, String tokenHash, Instant expiresAt, String deviceName, String userAgent) {
-        Instant now = Instant.now();
+    /**
+     * Creates a refresh-token record from a precomputed token hash.
+     */
+    public RefreshToken(
+            User user,
+            String tokenHash,
+            Instant expiresAt,
+            String deviceName,
+            String userAgent,
+            Instant createdAt
+    ) {
         this.user = user;
         this.tokenHash = tokenHash;
         this.expiresAt = expiresAt;
         this.deviceName = deviceName;
         this.userAgent = userAgent;
-        this.createdAt = now;
-        this.updatedAt = now;
+        this.createdAt = createdAt;
+        this.updatedAt = createdAt;
     }
 
+    /**
+     * Returns the user who owns this refresh-token session.
+     */
     public User getUser() {
         return user;
     }
 
+    /**
+     * Checks whether the token can still be rotated or revoked.
+     *
+     * @param now current time from the application clock
+     * @return true when the token is not revoked and has not expired
+     */
     public boolean isUsable(Instant now) {
         return revokedAt == null && expiresAt.isAfter(now);
     }
 
+    /**
+     * Indicates whether this token was already revoked.
+     */
     public boolean isRevoked() {
         return revokedAt != null;
     }
 
-    public void revoke() {
+    /**
+     * Marks the token as revoked once and updates its modification timestamp.
+     *
+     * @param now revocation time from the application clock
+     */
+    public void revoke(Instant now) {
         if (revokedAt != null) {
             return;
         }
-        Instant now = Instant.now();
         this.revokedAt = now;
         this.updatedAt = now;
     }

@@ -21,6 +21,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
 
+/**
+ * Unit tests for feed sorting and feed item mapping.
+ */
 @ExtendWith(MockitoExtension.class)
 class PostFeedServiceTest {
 

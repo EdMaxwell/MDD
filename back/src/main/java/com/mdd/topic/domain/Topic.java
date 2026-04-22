@@ -10,6 +10,9 @@ import java.util.Objects;
 import java.util.Locale;
 import java.util.UUID;
 
+/**
+ * Topic that groups articles and can be followed by users.
+ */
 @Entity
 @Table(name = "topics")
 public class Topic {
@@ -30,6 +33,9 @@ public class Topic {
     protected Topic() {
     }
 
+    /**
+     * Creates a topic and derives its stable slug from the display name.
+     */
     public Topic(String name, String description) {
         this.slug = slugify(name);
         this.name = name;
@@ -52,6 +58,9 @@ public class Topic {
         return description;
     }
 
+    /**
+     * Converts a display name into the slug stored in the database.
+     */
     private static String slugify(String value) {
         return value == null
                 ? null
@@ -66,11 +75,13 @@ public class Topic {
         if (!(object instanceof Topic topic)) {
             return false;
         }
-        return Objects.equals(id, topic.id);
+        // Generated ids are null before persistence, so transient entities must not compare equal.
+        return id != null && Objects.equals(id, topic.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        // Keep the hash stable while Hibernate assigns the generated id.
+        return getClass().hashCode();
     }
 }

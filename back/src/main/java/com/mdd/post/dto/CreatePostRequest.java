@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.UUID;
 
+/**
+ * Payload used to create an article in a selected topic.
+ */
 public record CreatePostRequest(
         @NotNull(message = "Le theme est obligatoire")
         UUID topicId,

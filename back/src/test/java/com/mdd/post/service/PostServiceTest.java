@@ -32,6 +32,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+/**
+ * Unit tests for article creation, detail loading and comment creation.
+ */
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
 

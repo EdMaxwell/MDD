@@ -15,6 +15,9 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * Article published by a user under one topic.
+ */
 @Entity
 @Table(name = "posts")
 public class Post {
@@ -46,6 +49,9 @@ public class Post {
     protected Post() {
     }
 
+    /**
+     * Creates a post with backend-controlled timestamps.
+     */
     public Post(User author, Topic topic, String title, String content, Instant createdAt) {
         this.author = author;
         this.topic = topic;
@@ -91,11 +97,13 @@ public class Post {
         if (!(object instanceof Post post)) {
             return false;
         }
-        return Objects.equals(id, post.id);
+        // Generated ids are null before persistence, so transient entities must not compare equal.
+        return id != null && Objects.equals(id, post.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        // Keep the hash stable while Hibernate assigns the generated id.
+        return getClass().hashCode();
     }
 }
