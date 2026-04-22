@@ -53,9 +53,12 @@
   text-align: center;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 960px) {
+  .topics-shell,
   .topics-page {
-    width: min(100%, 390px);
+    width: 100dvw;
+    max-width: none;
+    margin: 0;
   }
 
   .topics-grid {

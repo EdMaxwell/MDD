@@ -6,9 +6,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../core/auth/auth.service';
-import { BrandLogoComponent } from '../../shared/ui/brand-logo.component';
-import { TopbarComponent } from '../../shared/ui/topbar.component';
-import { UiButtonComponent } from '../../shared/ui/ui-button.component';
+import { BrandLogoComponent } from '../../shared/ui/brand-logo/brand-logo.component';
+import { TopbarComponent } from '../../shared/ui/topbar/topbar.component';
+import { UiButtonComponent } from '../../shared/ui/ui-button/ui-button.component';
 
 type AuthScreen = 'landing' | 'login' | 'register';
 const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;

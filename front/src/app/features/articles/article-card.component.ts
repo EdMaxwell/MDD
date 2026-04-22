@@ -96,7 +96,7 @@ import { ArticleFeedItem } from './article-feed.service';
         -webkit-line-clamp: 4;
       }
 
-      @media (max-width: 768px) {
+      @media (max-width: 960px) {
         .article-card {
           min-height: 8.65rem;
           gap: 0.55rem;

@@ -4,8 +4,8 @@ import { Component, effect, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
-import { TopbarComponent } from '../../shared/ui/topbar.component';
-import { UiButtonComponent } from '../../shared/ui/ui-button.component';
+import { TopbarComponent } from '../../shared/ui/topbar/topbar.component';
+import { UiButtonComponent } from '../../shared/ui/ui-button/ui-button.component';
 import { TopicItem, TopicSubscriptionService } from '../topics/topic-subscription.service';
 import { ArticleFeedService } from './article-feed.service';
 
