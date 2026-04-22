@@ -6,6 +6,9 @@ import { HomePageComponent } from './features/home/home-page.component';
 import { ProfilePageComponent } from './features/profile/profile-page.component';
 import { TopicsPageComponent } from './features/topics/topics-page.component';
 
+/**
+ * Client routes for the MDD single-page application.
+ */
 export const routes: Routes = [
   { path: '', component: AuthPageComponent, data: { screen: 'landing' } },
   { path: 'login', component: AuthPageComponent, data: { screen: 'login' } },

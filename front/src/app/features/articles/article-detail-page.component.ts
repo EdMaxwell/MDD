@@ -7,6 +7,9 @@ import { AuthService } from '../../core/auth/auth.service';
 import { TopbarComponent } from '../../shared/ui/topbar.component';
 import { ArticleComment, ArticleDetail, ArticleFeedService } from './article-feed.service';
 
+/**
+ * Displays an article detail and lets the authenticated user append comments.
+ */
 @Component({
   selector: 'app-article-detail-page',
   standalone: true,
@@ -45,10 +48,16 @@ export class ArticleDetailPageComponent {
     });
   }
 
+  /**
+   * Returns to the feed page.
+   */
   protected goBack(): void {
     this.router.navigateByUrl('/home');
   }
 
+  /**
+   * Adds a comment to the loaded article and updates the local comment list.
+   */
   protected submitComment(): void {
     const article = this.article();
     if (!article || this.commentForm.invalid || this.submittingComment()) {
@@ -72,6 +81,9 @@ export class ArticleDetailPageComponent {
     });
   }
 
+  /**
+   * Loads the article referenced by the current route parameter.
+   */
   private loadArticle(): void {
     const articleId = this.route.snapshot.paramMap.get('id');
     if (!articleId) {
@@ -95,6 +107,9 @@ export class ArticleDetailPageComponent {
     });
   }
 
+  /**
+   * Maps API failures to messages specific to article detail and comments.
+   */
   private resolveError(error: HttpErrorResponse): string {
     if (error.status === 0) {
       return 'Le backend est inaccessible. Verifie que Spring Boot tourne sur le port 8080.';

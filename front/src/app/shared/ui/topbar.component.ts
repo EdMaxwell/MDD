@@ -3,6 +3,9 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { BrandLogoComponent } from './brand-logo.component';
 
+/**
+ * Shared authenticated navigation bar used by application pages.
+ */
 @Component({
   selector: 'app-topbar',
   standalone: true,
@@ -141,6 +144,9 @@ export class TopbarComponent {
   protected readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
+  /**
+   * Ends the current session from the navigation action.
+   */
   protected logout(): void {
     this.authService.logout();
     this.router.navigateByUrl('/');

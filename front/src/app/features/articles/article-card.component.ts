@@ -1,7 +1,10 @@
 import { DatePipe } from '@angular/common';
-import { Component, EventEmitter, Output, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { ArticleFeedItem } from './article-feed.service';
 
+/**
+ * Displays a compact, keyboard-accessible article preview for feed grids.
+ */
 @Component({
   selector: 'app-article-card',
   standalone: true,
@@ -118,10 +121,17 @@ import { ArticleFeedItem } from './article-feed.service';
   ],
 })
 export class ArticleCardComponent {
+  /** Article data rendered by the card. */
   readonly article = input.required<ArticleFeedItem>();
 
-  @Output() readonly articleClick = new EventEmitter<string>();
+  /** Emits the selected article id when the card is clicked or activated from the keyboard. */
+  readonly articleClick = output<string>();
 
+  /**
+   * Handles the Space key manually because the card uses article semantics with button behavior.
+   *
+   * @param event keyboard event raised by Angular's keydown binding
+   */
   protected selectFromSpace(event: Event): void {
     event.preventDefault();
     this.articleClick.emit(this.article().id);

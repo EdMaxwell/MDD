@@ -9,6 +9,9 @@ import { UiButtonComponent } from '../../shared/ui/ui-button.component';
 import { TopicItem, TopicSubscriptionService } from '../topics/topic-subscription.service';
 import { ArticleFeedService } from './article-feed.service';
 
+/**
+ * Presents the article creation form and loads the topic catalog required by it.
+ */
 @Component({
   selector: 'app-article-create-page',
   standalone: true,
@@ -48,10 +51,16 @@ export class ArticleCreatePageComponent {
     });
   }
 
+  /**
+   * Returns to the article feed without saving.
+   */
   protected goBack(): void {
     this.router.navigateByUrl('/home');
   }
 
+  /**
+   * Creates the article and navigates to its detail page after success.
+   */
   protected submit(): void {
     if (this.form.invalid || this.submitting()) {
       this.form.markAllAsTouched();
@@ -73,6 +82,9 @@ export class ArticleCreatePageComponent {
     });
   }
 
+  /**
+   * Loads topics so the article can be attached to an existing backend topic.
+   */
   private loadTopics(): void {
     this.loadingTopics.set(true);
     this.topicSubscriptionService.loadTopics().subscribe({
@@ -87,6 +99,9 @@ export class ArticleCreatePageComponent {
     });
   }
 
+  /**
+   * Maps API failures to messages specific to article creation.
+   */
   private resolveError(error: HttpErrorResponse): string {
     if (error.status === 0) {
       return 'Le backend est inaccessible. Verifie que Spring Boot tourne sur le port 8080.';

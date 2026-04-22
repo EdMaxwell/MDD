@@ -2,6 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { App } from './app';
 
+/**
+ * Smoke tests for the root Angular component.
+ */
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
