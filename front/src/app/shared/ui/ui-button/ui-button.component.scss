@@ -1,0 +1,32 @@
+.ui-button {
+  min-width: 110px;
+  min-height: 31px;
+  padding: 0.45rem 1rem;
+  border-radius: 5px;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  transition: opacity 120ms ease;
+}
+
+.ui-button-outline {
+  border: 1px solid #8e8e8e;
+  background: #ffffff;
+  color: #121212;
+}
+
+.ui-button-primary {
+  border: 0;
+  background: #7763da;
+  color: #ffffff;
+}
+
+.ui-button-muted {
+  border: 0;
+  background: #939393;
+  color: #ffffff;
+}
+
+.ui-button:disabled {
+  cursor: default;
+}

@@ -1,0 +1,30 @@
+@mixin page-host {
+  display: block;
+  min-height: 100dvh;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #121212;
+  background: #ffffff;
+}
+
+@mixin page-shell {
+  min-height: 100dvh;
+}
+
+@mixin bounded-page($rows: auto 1fr, $max-width: 1440px) {
+  width: min(100%, $max-width);
+  min-height: 100dvh;
+  margin: 0 auto;
+  display: grid;
+  grid-template-rows: $rows;
+}
+
+@mixin topbar-divider {
+  border-bottom: 1px solid #1d1d1d;
+}
+
+@mixin mobile-full-bleed {
+  width: 100dvw;
+  max-width: none;
+  margin: 0;
+}
+

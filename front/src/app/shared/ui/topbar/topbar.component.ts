@@ -1,5 +1,4 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { NgIf } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { AvatarModule } from 'primeng/avatar';
@@ -11,7 +10,6 @@ import { BrandLogoComponent } from '../brand-logo/brand-logo.component';
   selector: 'app-topbar',
   standalone: true,
   imports: [
-    NgIf,
     AvatarModule,
     BrandLogoComponent,
     MenubarModule,

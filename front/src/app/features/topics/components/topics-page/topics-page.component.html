@@ -13,7 +13,14 @@
         <p class="topics-feedback">{{ topicsError() }}</p>
       }
 
-      <section class="topics-grid" aria-label="Liste des themes">
+      <app-paginated-card-grid
+        ariaLabel="Liste des themes"
+        [currentPage]="currentPage()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="pageSizeOptions"
+        [totalRecords]="totalTopics()"
+        (pageChange)="changePage($event)"
+      >
         @for (topic of topics(); track topic.id) {
           <app-topic-card
             [topic]="topic"
@@ -21,7 +28,7 @@
             (subscribe)="subscribe($event)"
           />
         }
-      </section>
+      </app-paginated-card-grid>
     } @else if (topicsError()) {
       <section class="topics-state topics-state-error">
         <p>{{ topicsError() }}</p>

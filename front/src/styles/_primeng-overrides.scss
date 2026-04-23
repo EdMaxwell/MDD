@@ -1,0 +1,105 @@
+@use 'cards';
+
+.topic-card .p-card-body {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 0.5rem;
+  height: 100%;
+  padding: 0.75rem 1rem 0.85rem;
+}
+
+.topic-card .p-card-title {
+  @include cards.clamp-lines(2);
+  color: #121212;
+  font-size: 1.1rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.topic-card .p-card-content,
+.topic-card .p-card-footer {
+  color: #121212;
+}
+
+.topic-card .p-card-content {
+  padding: 0;
+  overflow: hidden;
+}
+
+.article-card .p-card-body {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 0.5rem;
+  height: 100%;
+  padding: 0.75rem 1rem 0.85rem;
+}
+
+.article-card .p-card-caption {
+  gap: 0.45rem;
+}
+
+.article-card .p-card-title {
+  @include cards.clamp-lines(2);
+  color: #121212;
+  font-size: 1.1rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.article-card .p-card-subtitle,
+.article-card .p-card-content,
+.article-card .p-card-footer {
+  color: #121212;
+}
+
+.article-card .p-card-content {
+  padding: 0;
+  overflow: hidden;
+}
+
+.card-grid-paginator .p-paginator {
+  justify-content: center;
+  gap: 0.35rem;
+  flex-wrap: nowrap;
+  border: 0;
+  background: transparent;
+  white-space: nowrap;
+}
+
+.card-grid-paginator .p-paginator-page,
+.card-grid-paginator .p-paginator-prev,
+.card-grid-paginator .p-paginator-next {
+  min-width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 8px;
+}
+
+.card-grid-paginator .p-paginator-page-selected {
+  background: #7763da;
+  color: #ffffff;
+}
+
+.card-grid-paginator .p-paginator-current {
+  color: #4a4a4a;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 960px) {
+  .topic-card .p-card-body {
+    gap: 0.4rem;
+    padding: 0.6rem 0.85rem 0.7rem;
+  }
+
+  .topic-card .p-card-title {
+    font-size: 1rem;
+  }
+
+  .article-card .p-card-body {
+    gap: 0.4rem;
+    padding: 0.6rem 0.85rem 0.7rem;
+  }
+
+  .article-card .p-card-title {
+    font-size: 1rem;
+  }
+}

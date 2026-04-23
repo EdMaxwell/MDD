@@ -2,10 +2,17 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '../../core/auth/auth.service';
-import { TopbarComponent } from '../../shared/ui/topbar/topbar.component';
-import { TopicCardComponent } from './topic-card.component';
-import { TopicItem, TopicSubscriptionService } from './topic-subscription.service';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { PaginatedCardGridComponent } from '../../../../shared/ui/paginated-card-grid/paginated-card-grid.component';
+import { TopbarComponent } from '../../../../shared/ui/topbar/topbar.component';
+import { TopicCardComponent } from '../topic-card/topic-card.component';
+import {
+  DEFAULT_TOPIC_PAGE_SIZE,
+  TOPIC_PAGE_SIZE_OPTIONS,
+  TopicItem,
+  TopicSubscriptionService,
+} from '../../topic-subscription.service';
+import { PaginatorState } from 'primeng/types/paginator';
 
 /**
  * Displays the topic catalog and lets authenticated users subscribe to topics.
@@ -13,11 +20,12 @@ import { TopicItem, TopicSubscriptionService } from './topic-subscription.servic
 @Component({
   selector: 'app-topics-page',
   standalone: true,
-  imports: [CommonModule, TopbarComponent, TopicCardComponent],
+  imports: [CommonModule, TopbarComponent, TopicCardComponent, PaginatedCardGridComponent],
   templateUrl: './topics-page.component.html',
   styleUrl: './topics-page.component.scss',
 })
 export class TopicsPageComponent {
+  protected readonly pageSizeOptions = [...TOPIC_PAGE_SIZE_OPTIONS];
   protected readonly authService = inject(AuthService);
   private readonly topicSubscriptionService = inject(TopicSubscriptionService);
   private readonly router = inject(Router);
@@ -26,6 +34,9 @@ export class TopicsPageComponent {
   protected readonly loadingTopics = signal(true);
   protected readonly topicsError = signal('');
   protected readonly updatingTopicIds = signal<Set<string>>(new Set());
+  protected readonly currentPage = signal(0);
+  protected readonly pageSize = signal(DEFAULT_TOPIC_PAGE_SIZE);
+  protected readonly totalTopics = signal(0);
 
   constructor() {
     this.authService.init();
@@ -39,6 +50,15 @@ export class TopicsPageComponent {
         this.router.navigateByUrl('/');
       }
     });
+  }
+
+  /**
+   * Loads the topic page selected from the shared paginator.
+   */
+  protected changePage(event: PaginatorState): void {
+    this.pageSize.set(event.rows ?? DEFAULT_TOPIC_PAGE_SIZE);
+    this.currentPage.set(event.page ?? 0);
+    this.loadTopics();
   }
 
   /**
@@ -78,9 +98,17 @@ export class TopicsPageComponent {
     this.loadingTopics.set(true);
     this.topicsError.set('');
 
-    this.topicSubscriptionService.loadTopics().subscribe({
-      next: (topics) => {
-        this.topics.set(topics);
+    this.topicSubscriptionService.loadTopics(this.currentPage(), this.pageSize()).subscribe({
+      next: (page) => {
+        if (page.content.length === 0 && page.totalElements > 0 && this.currentPage() > 0) {
+          this.currentPage.set(0);
+          this.loadTopics();
+          return;
+        }
+
+        this.topics.set(page.content);
+        this.currentPage.set(page.page);
+        this.totalTopics.set(page.totalElements);
         this.loadingTopics.set(false);
       },
       error: (error: HttpErrorResponse) => {

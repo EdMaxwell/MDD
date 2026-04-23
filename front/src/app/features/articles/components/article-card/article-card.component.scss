@@ -1,0 +1,69 @@
+@use '../../../../../styles/a11y';
+@use '../../../../../styles/cards';
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.article-card {
+  @include cards.base-card;
+  cursor: pointer;
+}
+
+.article-card:focus-visible {
+  outline: 2px solid #7763da;
+  outline-offset: 3px;
+}
+
+dl,
+dd,
+p {
+  margin: 0;
+}
+
+.article-meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+}
+
+dt {
+  @include a11y.sr-only;
+}
+
+dd,
+p {
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+p {
+  @include cards.clamp-lines(2);
+}
+
+.article-topic {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid #7763da;
+  border-radius: 999px;
+  color: #5e47bd;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 960px) {
+  dd,
+  p {
+    font-size: 0.95rem;
+    line-height: 1.12;
+  }
+
+  p {
+    -webkit-line-clamp: 2;
+  }
+}

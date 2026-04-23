@@ -1,0 +1,30 @@
+@use '../../../../../styles/cards';
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.topic-card {
+  @include cards.base-card;
+}
+
+p {
+  margin: 0;
+  @include cards.clamp-lines(3);
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+app-ui-button {
+  display: inline-flex;
+  justify-self: start;
+}
+
+@media (max-width: 960px) {
+  p {
+    font-size: 0.95rem;
+    line-height: 1.12;
+    -webkit-line-clamp: 3;
+  }
+}

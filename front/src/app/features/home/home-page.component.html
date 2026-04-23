@@ -28,11 +28,18 @@
         <p>{{ feedError() }}</p>
       </section>
     } @else if (articles().length) {
-      <section class="article-grid" aria-label="Fil d'actualite">
+      <app-paginated-card-grid
+        ariaLabel="Fil d'actualite"
+        [currentPage]="currentPage()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="pageSizeOptions"
+        [totalRecords]="totalArticles()"
+        (pageChange)="changePage($event)"
+      >
         @for (article of articles(); track article.id) {
           <app-article-card [article]="article" (articleClick)="openArticle($event)" />
         }
-      </section>
+      </app-paginated-card-grid>
     } @else {
       <section class="feed-state">
         <p>Aucun article a afficher pour le moment.</p>

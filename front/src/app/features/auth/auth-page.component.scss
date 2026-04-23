@@ -1,15 +1,13 @@
+@use '../../../styles/layout';
+
 :host {
   --purple-dark: #6854d0;
   --error: #b13f3f;
-  display: block;
-  min-height: 100dvh;
-  color: #121212;
-  font-family: Arial, Helvetica, sans-serif;
-  background: #ffffff;
+  @include layout.page-host;
 }
 
 .page-shell {
-  min-height: 100dvh;
+  @include layout.page-shell;
   display: grid;
   place-items: center;
   padding: 1.25rem;

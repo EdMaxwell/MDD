@@ -1,0 +1,19 @@
+<p-card [pt]="cardPassThrough">
+  <ng-template #title>
+    {{ topic().name }}
+  </ng-template>
+
+  <p>
+    {{ topic().description || 'Aucune description disponible pour le moment.' }}
+  </p>
+
+  <ng-template #footer>
+    <app-ui-button
+      [variant]="topic().subscribed ? 'muted' : 'primary'"
+      [disabled]="topic().subscribed || loading()"
+      (buttonClick)="subscribe.emit(topic().id)"
+    >
+      {{ topic().subscribed ? 'Deja abonne' : loading() ? 'Abonnement...' : "S'abonner" }}
+    </app-ui-button>
+  </ng-template>
+</p-card>

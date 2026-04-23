@@ -1,25 +1,20 @@
+@use '../../../styles/a11y';
+@use '../../../styles/layout';
+
 :host {
-  display: block;
-  min-height: 100dvh;
-  font-family: Arial, Helvetica, sans-serif;
-  color: #121212;
-  background: #ffffff;
+  @include layout.page-host;
 }
 
 .profile-shell {
-  min-height: 100dvh;
+  @include layout.page-shell;
 }
 
 .profile-page {
-  width: min(100%, 1440px);
-  min-height: 100dvh;
-  margin: 0 auto;
-  display: grid;
-  grid-template-rows: auto 1fr;
+  @include layout.bounded-page;
 }
 
 .profile-topbar {
-  border-bottom: 1px solid #1d1d1d;
+  @include layout.topbar-divider;
 }
 
 .profile-content {
@@ -181,23 +176,13 @@ h1 {
 }
 
 .sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+  @include a11y.sr-only;
 }
 
 @media (max-width: 960px) {
   .profile-shell,
   .profile-page {
-    width: 100dvw;
-    max-width: none;
-    margin: 0;
+    @include layout.mobile-full-bleed;
   }
 
   .profile-content {

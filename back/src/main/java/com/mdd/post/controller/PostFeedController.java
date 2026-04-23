@@ -1,6 +1,7 @@
 package com.mdd.post.controller;
 
 import com.mdd.auth.domain.User;
+import com.mdd.common.PageResponse;
 import com.mdd.post.dto.CommentResponse;
 import com.mdd.post.dto.CreateCommentRequest;
 import com.mdd.post.dto.CreatePostRequest;
@@ -9,7 +10,6 @@ import com.mdd.post.dto.PostFeedItemResponse;
 import com.mdd.post.service.PostFeedService;
 import com.mdd.post.service.PostService;
 import jakarta.validation.Valid;
-import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -58,14 +58,18 @@ public class PostFeedController {
      *
      * @param user principal resolved from the access token
      * @param sort requested creation-date order
-     * @return feed items
+     * @param page zero-based page index
+     * @param size requested page size, capped by the backend
+     * @return paginated feed items
      */
     @GetMapping("/feed")
-    public List<PostFeedItemResponse> feed(
+    public PageResponse<PostFeedItemResponse> feed(
             @AuthenticationPrincipal User user,
-            @RequestParam(defaultValue = "desc") String sort
+            @RequestParam(defaultValue = "desc") String sort,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size
     ) {
-        return postFeedService.currentUserFeed(user, sort);
+        return postFeedService.currentUserFeed(user, sort, page, size);
     }
 
     /**

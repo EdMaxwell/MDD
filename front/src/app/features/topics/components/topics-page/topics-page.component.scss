@@ -1,0 +1,48 @@
+@use '../../../../../styles/layout';
+
+:host {
+  @include layout.page-host;
+}
+
+.topics-shell {
+  @include layout.page-shell;
+}
+
+.topics-page {
+  @include layout.bounded-page;
+}
+
+.topics-topbar {
+  @include layout.topbar-divider;
+}
+
+.topics-state {
+  min-height: 16rem;
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.topics-state p,
+.topics-feedback {
+  margin: 0;
+}
+
+.topics-state-error,
+.topics-feedback {
+  color: #8f1d1d;
+}
+
+.topics-feedback {
+  padding: 1rem 1rem 0;
+  text-align: center;
+}
+
+@media (max-width: 960px) {
+  .topics-shell,
+  .topics-page {
+    @include layout.mobile-full-bleed;
+  }
+
+}

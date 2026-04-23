@@ -1,0 +1,25 @@
+<section
+  class="card-grid"
+  [attr.aria-label]="ariaLabel()"
+  [style.--card-grid-row-gap]="rowGap()"
+  [style.--card-grid-column-gap]="columnGap()"
+  [style.--card-grid-padding]="gridPadding()"
+  [style.--card-grid-mobile-gap]="mobileGap()"
+  [style.--card-grid-mobile-padding]="mobileGridPadding()"
+>
+  <ng-content />
+</section>
+
+@if (totalRecords() > pageSize()) {
+  <p-paginator
+    class="card-grid-paginator"
+    [first]="currentPage() * pageSize()"
+    [rows]="pageSize()"
+    [rowsPerPageOptions]="pageSizeOptions()"
+    [totalRecords]="totalRecords()"
+    [showCurrentPageReport]="true"
+    [showFirstLastIcon]="false"
+    currentPageReportTemplate="{first}-{last} sur {totalRecords}"
+    (onPageChange)="pageChange.emit($event)"
+  />
+}

@@ -1,0 +1,71 @@
+<header class="topbar" aria-label="En-tete principal">
+  <!-- Desktop -->
+  <div class="desktop-nav">
+    <p-menubar [model]="desktopNavigationItems()" ariaLabel="Navigation principale" styleClass="mdd-menubar">
+      <ng-template #start>
+        <a routerLink="/home" class="brand-link" aria-label="Retour a l'accueil">
+          <app-brand-logo size="small" />
+        </a>
+      </ng-template>
+
+      <ng-template #end>
+        <a
+          routerLink="/profile"
+          routerLinkActive="is-active-icon"
+          class="profile-link"
+          aria-label="Profil utilisateur"
+        >
+          <p-avatar icon="pi pi-user" shape="circle" size="large" ariaLabel="Profil utilisateur" />
+        </a>
+      </ng-template>
+    </p-menubar>
+  </div>
+
+  <!-- Mobile -->
+  <div class="mobile-nav">
+    <a routerLink="/home" class="brand-link" aria-label="Retour a l'accueil">
+      <app-brand-logo size="small" />
+    </a>
+
+    @if (!isMobileMenuOpen()) {
+      <button
+        type="button"
+        class="burger-button"
+        aria-label="Ouvrir le menu"
+        [attr.aria-expanded]="false"
+        (click)="toggleMobileMenu()"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    }
+
+    @if (isMobileMenuOpen()) {
+      <div class="mobile-menu-backdrop" (click)="closeMobileMenu()"></div>
+
+      <nav class="mobile-menu" aria-label="Navigation mobile">
+        <div class="mobile-menu-links">
+          @if (authService.isAuthenticated()) {
+            <button type="button" class="logout-button" (click)="logoutFromMobileMenu()">
+              Se déconnecter
+            </button>
+          }
+
+          <a routerLink="/home" (click)="closeMobileMenu()">Articles</a>
+          <a routerLink="/topics" (click)="closeMobileMenu()">Thèmes</a>
+        </div>
+
+        <a
+          routerLink="/profile"
+          routerLinkActive="is-active-icon"
+          class="mobile-profile-link"
+          aria-label="Profil utilisateur"
+          (click)="closeMobileMenu()"
+        >
+          <p-avatar icon="pi pi-user" shape="circle" size="large" ariaLabel="Profil utilisateur" />
+        </a>
+      </nav>
+    }
+  </div>
+</header>

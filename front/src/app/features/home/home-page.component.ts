@@ -2,15 +2,19 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { PaginatorState } from 'primeng/types/paginator';
 import {
+  ARTICLE_FEED_PAGE_SIZE_OPTIONS,
   ArticleFeedItem,
   ArticleFeedService,
   ArticleSortDirection,
-} from '../articles/article-feed.service';
+  DEFAULT_ARTICLE_FEED_PAGE_SIZE,
+} from '../articles/services/article-feed.service';
 import { AuthService } from '../../core/auth/auth.service';
-import { ArticleCardComponent } from '../articles/article-card.component';
+import { ArticleCardComponent } from '../articles/components/article-card/article-card.component';
 import { TopbarComponent } from '../../shared/ui/topbar/topbar.component';
 import { UiButtonComponent } from '../../shared/ui/ui-button/ui-button.component';
+import { PaginatedCardGridComponent } from '../../shared/ui/paginated-card-grid/paginated-card-grid.component';
 
 /**
  * Displays the authenticated user's article feed and feed-level actions.
@@ -18,11 +22,12 @@ import { UiButtonComponent } from '../../shared/ui/ui-button/ui-button.component
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [CommonModule, TopbarComponent, UiButtonComponent, ArticleCardComponent],
+  imports: [CommonModule, TopbarComponent, UiButtonComponent, ArticleCardComponent, PaginatedCardGridComponent],
   templateUrl: './home-page.component.html',
   styleUrl: './home-page.component.scss',
 })
 export class HomePageComponent {
+  protected readonly pageSizeOptions = [...ARTICLE_FEED_PAGE_SIZE_OPTIONS];
   protected readonly authService = inject(AuthService);
   private readonly articleFeedService = inject(ArticleFeedService);
   private readonly router = inject(Router);
@@ -31,6 +36,9 @@ export class HomePageComponent {
   protected readonly loadingFeed = signal(true);
   protected readonly feedError = signal('');
   protected readonly sortDirection = signal<ArticleSortDirection>('desc');
+  protected readonly currentPage = signal(0);
+  protected readonly pageSize = signal(DEFAULT_ARTICLE_FEED_PAGE_SIZE);
+  protected readonly totalArticles = signal(0);
 
   constructor() {
     this.authService.init();
@@ -51,6 +59,16 @@ export class HomePageComponent {
    */
   protected toggleSort(): void {
     this.sortDirection.update((direction) => (direction === 'desc' ? 'asc' : 'desc'));
+    this.currentPage.set(0);
+    this.loadFeed();
+  }
+
+  /**
+   * Loads the page selected from the feed paginator.
+   */
+  protected changePage(event: PaginatorState): void {
+    this.pageSize.set(event.rows ?? DEFAULT_ARTICLE_FEED_PAGE_SIZE);
+    this.currentPage.set(event.page ?? 0);
     this.loadFeed();
   }
 
@@ -75,9 +93,11 @@ export class HomePageComponent {
     this.loadingFeed.set(true);
     this.feedError.set('');
 
-    this.articleFeedService.loadFeed(this.sortDirection()).subscribe({
-      next: (articles) => {
-        this.articles.set(articles);
+    this.articleFeedService.loadFeed(this.sortDirection(), this.currentPage(), this.pageSize()).subscribe({
+      next: (page) => {
+        this.articles.set(page.content);
+        this.currentPage.set(page.page);
+        this.totalArticles.set(page.totalElements);
         this.loadingFeed.set(false);
       },
       error: (error: HttpErrorResponse) => {
