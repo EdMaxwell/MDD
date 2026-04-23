@@ -11,11 +11,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Base64;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,9 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class RefreshTokenService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(RefreshTokenService.class);
     private static final int TOKEN_BYTES = 64;
+    private static final Duration ROTATION_REUSE_GRACE_PERIOD = Duration.ofSeconds(5);
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtProperties jwtProperties;
@@ -78,14 +76,25 @@ public class RefreshTokenService {
      */
     @Transactional
     public RefreshTokenRotation rotate(String rawRefreshToken, HttpServletRequest request) {
-        RefreshToken existingToken = refreshTokenRepository.findByTokenHash(hash(rawRefreshToken))
-                .orElseThrow(InvalidRefreshTokenException::new);
+        String tokenHash = hash(rawRefreshToken);
+
+        RefreshToken existingToken = refreshTokenRepository.findByTokenHash(tokenHash)
+                .orElse(null);
+
+        if (existingToken == null) {
+            throw new InvalidRefreshTokenException();
+        }
 
         if (existingToken.isRevoked()) {
+            Instant revokedAt = existingToken.getRevokedAt();
+            if (revokedAt != null && !revokedAt.isBefore(Instant.now(clock).minus(ROTATION_REUSE_GRACE_PERIOD))) {
+                // Concurrent refresh attempts from the same session can briefly reuse the previous token.
+                // Treat this as an invalid token, not as suspicious theft.
+                throw new InvalidRefreshTokenException();
+            }
             // A revoked token appearing again may mean a stolen token was replayed.
             // Revoking the user's remaining active tokens forces a clean login.
             revokeActiveTokensFor(existingToken.getUser());
-            LOGGER.warn("Suspicious reuse of revoked refresh token for user {}", existingToken.getUser().getId());
             throw new SuspiciousRefreshTokenReuseException();
         }
 
@@ -106,12 +115,18 @@ public class RefreshTokenService {
      */
     @Transactional
     public void revoke(String rawRefreshToken) {
-        RefreshToken refreshToken = refreshTokenRepository.findByTokenHash(hash(rawRefreshToken))
-                .orElseThrow(InvalidRefreshTokenException::new);
+        String tokenHash = hash(rawRefreshToken);
+        RefreshToken refreshToken = refreshTokenRepository.findByTokenHash(tokenHash)
+                .orElse(null);
+
+        if (refreshToken == null) {
+            throw new InvalidRefreshTokenException();
+        }
 
         Instant now = Instant.now(clock);
         if (refreshToken.isUsable(now)) {
             refreshToken.revoke(now);
+            return;
         }
     }
 

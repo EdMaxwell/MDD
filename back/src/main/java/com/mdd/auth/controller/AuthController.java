@@ -6,6 +6,8 @@ import com.mdd.auth.dto.LoginRequest;
 import com.mdd.auth.dto.RefreshTokenRequest;
 import com.mdd.auth.dto.RegisterRequest;
 import com.mdd.auth.dto.UserResponse;
+import com.mdd.auth.exception.InvalidRefreshTokenException;
+import com.mdd.auth.exception.SuspiciousRefreshTokenReuseException;
 import com.mdd.auth.service.AuthService;
 import com.mdd.security.JwtProperties;
 import jakarta.servlet.http.Cookie;
@@ -98,9 +100,16 @@ public class AuthController {
             HttpServletRequest servletRequest,
             HttpServletResponse servletResponse
     ) {
-        AuthResponse response = authService.refresh(resolveRefreshToken(request, servletRequest), servletRequest);
-        setRefreshCookie(servletResponse, response.refreshToken());
-        return response.withoutRefreshToken();
+        RefreshTokenResolution resolution = resolveRefreshToken(request, servletRequest);
+        try {
+            AuthResponse response = authService.refresh(resolution.token(), servletRequest);
+            setRefreshCookie(servletResponse, response.refreshToken());
+            return response.withoutRefreshToken();
+        } catch (InvalidRefreshTokenException | SuspiciousRefreshTokenReuseException exception) {
+            throw exception;
+        } catch (RuntimeException exception) {
+            throw new InvalidRefreshTokenException();
+        }
     }
 
     /**
@@ -117,7 +126,8 @@ public class AuthController {
             HttpServletRequest servletRequest,
             HttpServletResponse servletResponse
     ) {
-        authService.logout(resolveRefreshToken(request, servletRequest));
+        RefreshTokenResolution resolution = resolveRefreshToken(request, servletRequest);
+        authService.logout(resolution.token());
         clearRefreshCookie(servletResponse);
     }
 
@@ -138,12 +148,22 @@ public class AuthController {
      * <p>Cookies win over request bodies because the normal browser flow stores the
      * token as HttpOnly, which reduces accidental token exposure to JavaScript.</p>
      */
-    private String resolveRefreshToken(RefreshTokenRequest request, HttpServletRequest servletRequest) {
+    private RefreshTokenResolution resolveRefreshToken(RefreshTokenRequest request, HttpServletRequest servletRequest) {
         String cookieToken = refreshCookieValue(servletRequest);
+        boolean cookiePresent = cookieToken != null && !cookieToken.isBlank();
+        String bodyToken = request == null ? null : request.refreshToken();
+        boolean bodyPresent = bodyToken != null && !bodyToken.isBlank();
+
         if (cookieToken != null && !cookieToken.isBlank()) {
-            return cookieToken;
+            return new RefreshTokenResolution(cookieToken, "cookie", cookiePresent, bodyPresent);
         }
-        return request == null ? null : request.refreshToken();
+        return new RefreshTokenResolution(bodyToken, bodyPresent ? "body" : "missing", cookiePresent, bodyPresent);
+    }
+
+    /**
+     * Internal resolved token metadata used for refresh/logout diagnostics.
+     */
+    private record RefreshTokenResolution(String token, String source, boolean cookiePresent, boolean bodyPresent) {
     }
 
     /**

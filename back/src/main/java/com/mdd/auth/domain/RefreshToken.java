@@ -96,6 +96,13 @@ public class RefreshToken {
     }
 
     /**
+     * Returns when the token was revoked, or null when it is still active.
+     */
+    public Instant getRevokedAt() {
+        return revokedAt;
+    }
+
+    /**
      * Marks the token as revoked once and updates its modification timestamp.
      *
      * @param now revocation time from the application clock
