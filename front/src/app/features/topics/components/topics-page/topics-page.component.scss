@@ -1,25 +1,19 @@
+@use '../../../../../styles/layout';
+
 :host {
-  display: block;
-  min-height: 100dvh;
-  font-family: Arial, Helvetica, sans-serif;
-  color: #121212;
-  background: #ffffff;
+  @include layout.page-host;
 }
 
 .topics-shell {
-  min-height: 100dvh;
+  @include layout.page-shell;
 }
 
 .topics-page {
-  width: min(100%, 1440px);
-  min-height: 100dvh;
-  margin: 0 auto;
-  display: grid;
-  grid-template-rows: auto 1fr;
+  @include layout.bounded-page;
 }
 
 .topics-topbar {
-  border-bottom: 1px solid #1d1d1d;
+  @include layout.topbar-divider;
 }
 
 .topics-state {
@@ -48,9 +42,7 @@
 @media (max-width: 960px) {
   .topics-shell,
   .topics-page {
-    width: 100dvw;
-    max-width: none;
-    margin: 0;
+    @include layout.mobile-full-bleed;
   }
 
 }
