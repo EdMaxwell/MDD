@@ -40,7 +40,12 @@ body {
 
 .mdd-menubar .p-menubar-root-list {
   margin-left: auto;
+  flex: 0 0 auto;
   gap: 1.65rem;
+}
+
+.mdd-menubar .p-menubar-end {
+  margin-left: 1.65rem;
 }
 
 .mdd-menubar .p-menubar-item-link {
@@ -55,13 +60,19 @@ body {
 .mdd-menubar .p-menubar-item-link:hover,
 .mdd-menubar .p-menubar-item-link:focus,
 .mdd-menubar .p-menubar-item-link-active {
-  color: #6f57d2;
+  color: #121212;
   background: transparent;
 }
 
 .mdd-menubar .logout-item .p-menubar-item-link {
   color: #9b1111;
   font-weight: 700;
+}
+
+.mdd-menubar .logout-item .p-menubar-item-link:hover,
+.mdd-menubar .logout-item .p-menubar-item-link:focus,
+.mdd-menubar .logout-item .p-menubar-item-link-active {
+  color: #9b1111;
 }
 
 .mobile-profile-menu-link {
@@ -74,14 +85,15 @@ body {
   justify-content: center;
   width: 46px;
   height: 46px;
-  border: 3px solid #6f57d2;
-  background: #ffffff;
-  color: #6f57d2;
+  border: 0;
+  background: #f2f4f7;
+  color: #6b7280;
 }
 
 .profile-link.is-active-icon .profile-avatar.p-avatar,
 .mobile-profile-menu-link.is-active-icon .profile-avatar.p-avatar {
-  border-color: #6f57d2;
+  background: #ece7ff;
+  color: #6f57d2;
 }
 
 .profile-avatar.p-avatar .p-avatar-icon {
