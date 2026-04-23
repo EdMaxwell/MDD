@@ -16,33 +16,6 @@
   padding: 0 1rem 2rem;
 }
 
-:host ::ng-deep .card-grid-paginator .p-paginator {
-  justify-content: center;
-  gap: 0.35rem;
-  flex-wrap: nowrap;
-  border: 0;
-  background: transparent;
-  white-space: nowrap;
-}
-
-:host ::ng-deep .card-grid-paginator .p-paginator-page,
-:host ::ng-deep .card-grid-paginator .p-paginator-prev,
-:host ::ng-deep .card-grid-paginator .p-paginator-next {
-  min-width: 2.3rem;
-  height: 2.3rem;
-  border-radius: 8px;
-}
-
-:host ::ng-deep .card-grid-paginator .p-paginator-page-selected {
-  background: #7763da;
-  color: #ffffff;
-}
-
-:host ::ng-deep .card-grid-paginator .p-paginator-current {
-  color: #4a4a4a;
-  font-size: 0.95rem;
-}
-
 @media (max-width: 960px) {
   .card-grid {
     grid-template-columns: 1fr;

@@ -11,35 +11,6 @@
 
 p {
   margin: 0;
-}
-
-:host ::ng-deep .topic-card .p-card-body {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: 0.5rem;
-  height: 100%;
-  padding: 0.75rem 1rem 0.85rem;
-}
-
-:host ::ng-deep .topic-card .p-card-title {
-  @include cards.clamp-lines(2);
-  color: #121212;
-  font-size: 1.1rem;
-  line-height: 1.2;
-  font-weight: 700;
-}
-
-:host ::ng-deep .topic-card .p-card-content,
-:host ::ng-deep .topic-card .p-card-footer {
-  color: #121212;
-}
-
-:host ::ng-deep .topic-card .p-card-content {
-  padding: 0;
-  overflow: hidden;
-}
-
-p {
   @include cards.clamp-lines(3);
   font-size: 1rem;
   line-height: 1.25;
@@ -51,16 +22,6 @@ app-ui-button {
 }
 
 @media (max-width: 960px) {
-
-  :host ::ng-deep .topic-card .p-card-body {
-    gap: 0.4rem;
-    padding: 0.6rem 0.85rem 0.7rem;
-  }
-
-  :host ::ng-deep .topic-card .p-card-title {
-    font-size: 1rem;
-  }
-
   p {
     font-size: 0.95rem;
     line-height: 1.12;
