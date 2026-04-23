@@ -1,7 +1,7 @@
 import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, catchError, map, switchMap, tap, throwError } from 'rxjs';
+import { Observable, catchError, defer, finalize, map, shareReplay, switchMap, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 /** Public user identity stored in the client authentication state. */
@@ -62,6 +62,7 @@ export class AuthService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly storageKey = 'mdd.token';
   private initialized = false;
+  private refreshInFlight$: Observable<AuthResponse> | null = null;
 
   readonly currentUser = signal<AuthUser | null>(null);
   readonly checkingSession = signal(false);
@@ -86,7 +87,13 @@ export class AuthService {
     this.checkingSession.set(true);
     const token = localStorage.getItem(this.storageKey);
     const sessionRequest = token
-      ? this.fetchCurrentUser().pipe(catchError(() => this.refreshSession().pipe(map((response) => response.user))))
+      ? this.fetchCurrentUser().pipe(
+          catchError((error) =>
+            this.isSessionExpiredError(error)
+              ? this.refreshSession().pipe(map((response) => response.user))
+              : throwError(() => error),
+          ),
+        )
       : this.refreshSession().pipe(map((response) => response.user));
 
     sessionRequest.subscribe({
@@ -176,9 +183,7 @@ export class AuthService {
   updateProfile(payload: UpdateProfilePayload): Observable<UserProfile> {
     return this.requestWithRefresh(() =>
       this.http.put<UserProfile>(`${environment.apiUrl}/users/me`, payload, this.authOptions()),
-    ).pipe(
-      tap((profile) => this.currentUser.set(this.toAuthUser(profile))),
-    );
+    ).pipe(tap((profile) => this.currentUser.set(this.toAuthUser(profile))));
   }
 
   /**
@@ -235,9 +240,21 @@ export class AuthService {
    * Uses the HttpOnly refresh cookie to obtain a new access token.
    */
   private refreshSession(): Observable<AuthResponse> {
-    return this.http
-      .post<AuthResponse>(`${environment.apiUrl}/auth/refresh`, {}, { withCredentials: true })
-      .pipe(tap((response) => this.storeSession(response)));
+    if (this.refreshInFlight$) {
+      return this.refreshInFlight$;
+    }
+
+    this.refreshInFlight$ = defer(() =>
+      this.http.post<AuthResponse>(`${environment.apiUrl}/auth/refresh`, {}, { withCredentials: true }),
+    ).pipe(
+      tap((response) => this.storeSession(response)),
+      finalize(() => {
+        this.refreshInFlight$ = null;
+      }),
+      shareReplay({ bufferSize: 1, refCount: false }),
+    );
+
+    return this.refreshInFlight$;
   }
 
   /**
@@ -246,7 +263,7 @@ export class AuthService {
   private requestWithRefresh<T>(requestFactory: () => Observable<T>): Observable<T> {
     return requestFactory().pipe(
       catchError((error) => {
-        if (error.status !== 401) {
+        if (!this.isSessionExpiredError(error)) {
           return throwError(() => error);
         }
 
@@ -259,6 +276,15 @@ export class AuthService {
         );
       }),
     );
+  }
+
+  /**
+   * Detects the HTTP statuses used by the backend when a session has expired or can no longer be restored.
+   */
+  private isSessionExpiredError(error: unknown): boolean {
+    return typeof error === 'object' && error !== null && 'status' in error && (error as { status?: number }).status !== undefined
+      ? [401, 403].includes((error as { status: number }).status)
+      : false;
   }
 
   /**

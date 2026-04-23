@@ -107,6 +107,7 @@ public class AuthService {
      * @param servletRequest current request, forwarded to refresh-token creation for device metadata
      * @return a fresh access token and replacement refresh token
      */
+    @Transactional
     public AuthResponse refresh(String rawRefreshToken, HttpServletRequest servletRequest) {
         if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
             throw new InvalidRefreshTokenException();

@@ -2,11 +2,13 @@ package com.mdd.auth.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.mdd.auth.domain.RefreshToken;
 import com.mdd.auth.domain.User;
+import com.mdd.auth.exception.InvalidRefreshTokenException;
 import com.mdd.auth.exception.SuspiciousRefreshTokenReuseException;
 import com.mdd.auth.repository.RefreshTokenRepository;
 import com.mdd.security.JwtProperties;
@@ -61,7 +63,7 @@ class RefreshTokenServiceTest {
         User user = new User("Alice", "alice@example.com", "hashed-password");
         ReflectionTestUtils.setField(user, "id", UUID.fromString("00000000-0000-0000-0000-000000000001"));
         RefreshToken reusedToken = new RefreshToken(user, hash("reused-token"), NOW.plusSeconds(60), null, null, NOW);
-        reusedToken.revoke(NOW.plusSeconds(1));
+        reusedToken.revoke(NOW.minusSeconds(60));
         RefreshToken activeToken = new RefreshToken(user, hash("active-token"), NOW.plusSeconds(60), null, null, NOW);
 
         when(refreshTokenRepository.findByTokenHash(hash("reused-token"))).thenReturn(Optional.of(reusedToken));
@@ -72,6 +74,21 @@ class RefreshTokenServiceTest {
 
         assertThat(activeToken.isRevoked()).isTrue();
         verify(refreshTokenRepository).findAllByUserAndRevokedAtIsNull(user);
+    }
+
+    @Test
+    void rotateShouldTreatVeryRecentRevokedTokenAsInvalidWithoutRevokingOtherSessions() throws Exception {
+        User user = new User("Alice", "alice@example.com", "hashed-password");
+        ReflectionTestUtils.setField(user, "id", UUID.fromString("00000000-0000-0000-0000-000000000001"));
+        RefreshToken reusedToken = new RefreshToken(user, hash("reused-token"), NOW.plusSeconds(60), null, null, NOW);
+        reusedToken.revoke(NOW);
+
+        when(refreshTokenRepository.findByTokenHash(hash("reused-token"))).thenReturn(Optional.of(reusedToken));
+
+        assertThatThrownBy(() -> refreshTokenService.rotate("reused-token", null))
+                .isInstanceOf(InvalidRefreshTokenException.class);
+
+        verify(refreshTokenRepository, never()).findAllByUserAndRevokedAtIsNull(user);
     }
 
     private String hash(String rawToken) throws Exception {

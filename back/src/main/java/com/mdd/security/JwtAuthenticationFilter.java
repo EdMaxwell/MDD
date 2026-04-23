@@ -1,6 +1,5 @@
 package com.mdd.security;
 
-import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -64,8 +63,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             }
-        } catch (JwtException | IllegalArgumentException ignored) {
-            // Malformed, expired or tampered tokens must not leak parsing details.
+        } catch (RuntimeException exception) {
+            // Malformed, expired, unknown-user or tampered tokens must not leak details.
             SecurityContextHolder.clearContext();
         }
 
