@@ -1,3 +1,4 @@
+// Shared fixed-height card frame for topic and article grids.
 @mixin base-card($desktop_height: 10.75rem, $mobile_height: 9.65rem) {
   display: grid;
   height: $desktop_height;
@@ -14,6 +15,7 @@
   }
 }
 
+// Limits text blocks to a stable number of lines without changing card height.
 @mixin clamp-lines($lines) {
   display: -webkit-box;
   overflow: hidden;

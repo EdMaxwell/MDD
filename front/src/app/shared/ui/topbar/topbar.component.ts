@@ -6,6 +6,9 @@ import { MenubarModule } from 'primeng/menubar';
 import { AuthService } from '../../../core/auth/auth.service';
 import { BrandLogoComponent } from '../brand-logo/brand-logo.component';
 
+/**
+ * Renders the authenticated top navigation and keeps desktop and mobile logout flows aligned.
+ */
 @Component({
   selector: 'app-topbar',
   standalone: true,
