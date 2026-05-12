@@ -28,7 +28,6 @@ La documentation detaillee de chaque partie est disponible ici :
 .
 |-- back/                  # API REST Spring Boot
 |-- front/                 # Application Angular
-|-- docs/                  # Specifications, schema et aide locale
 |-- docker-compose.yml     # PostgreSQL et pgAdmin
 |-- .env.example           # Variables locales de reference
 `-- README.md              # Vue globale du projet
