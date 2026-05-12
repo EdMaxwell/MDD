@@ -19,6 +19,7 @@
         [pageSize]="pageSize()"
         [pageSizeOptions]="pageSizeOptions"
         [totalRecords]="totalTopics()"
+        mobileGridPadding="1.25rem 0.55rem 2rem"
         (pageChange)="changePage($event)"
       >
         @for (topic of topics(); track topic.id) {

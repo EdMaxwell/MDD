@@ -80,17 +80,21 @@ export class AuthService {
     }
 
     this.initialized = true;
+    this.logDebug('init:start');
     if (!isPlatformBrowser(this.platformId)) {
+      this.logDebug('init:ssr-skip');
       return;
     }
 
     this.checkingSession.set(true);
     const token = localStorage.getItem(this.storageKey);
+    this.logDebug('init:token-state', { hasToken: !!token });
     const sessionRequest = token
       ? this.fetchCurrentUser().pipe(
           catchError((error) =>
             this.isSessionExpiredError(error)
-              ? this.refreshSession().pipe(map((response) => response.user))
+              ? (this.logWarn('init:/auth/me-expired', this.describeHttpError(error)),
+                this.refreshSession().pipe(map((response) => response.user)))
               : throwError(() => error),
           ),
         )
@@ -98,10 +102,14 @@ export class AuthService {
 
     sessionRequest.subscribe({
       next: (user) => {
+        this.logDebug('init:session-restored', this.describeUser(user));
         this.currentUser.set(user);
         this.checkingSession.set(false);
       },
-      error: () => this.clearSession(),
+      error: (error) => {
+        this.logWarn('init:session-failed', this.describeHttpError(error));
+        this.clearSession();
+      },
     });
   }
 
@@ -112,9 +120,15 @@ export class AuthService {
    * @return authentication response observable
    */
   login(payload: LoginPayload): Observable<AuthResponse> {
+    this.logDebug('login:start', { email: this.maskLoginIdentifier(payload.email) });
     return this.http
       .post<AuthResponse>(`${environment.apiUrl}/auth/login`, payload, { withCredentials: true })
-      .pipe(tap((response) => this.storeSession(response)));
+      .pipe(
+        tap((response) => {
+          this.logDebug('login:success', this.describeAuthResponse(response));
+          this.storeSession(response);
+        }),
+      );
   }
 
   /**
@@ -124,9 +138,15 @@ export class AuthService {
    * @return authentication response observable
    */
   register(payload: RegisterPayload): Observable<AuthResponse> {
+    this.logDebug('register:start', { email: this.maskLoginIdentifier(payload.email), nameLength: payload.name.length });
     return this.http
       .post<AuthResponse>(`${environment.apiUrl}/auth/register`, payload, { withCredentials: true })
-      .pipe(tap((response) => this.storeSession(response)));
+      .pipe(
+        tap((response) => {
+          this.logDebug('register:success', this.describeAuthResponse(response));
+          this.storeSession(response);
+        }),
+      );
   }
 
   /**
@@ -134,8 +154,10 @@ export class AuthService {
    */
   logout(): void {
     this.http.post<void>(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true }).subscribe({
-      error: () => undefined,
+      next: () => this.logDebug('logout:success'),
+      error: (error) => this.logWarn('logout:request-failed', this.describeHttpError(error)),
     });
+    this.logDebug('logout:start');
     this.clearSession();
   }
 
@@ -146,6 +168,7 @@ export class AuthService {
    * `/auth/me` still works. The source flag lets the profile page display degraded data safely.</p>
    */
   loadProfile(): Observable<LoadedUserProfile> {
+    this.logDebug('profile:load:start');
     return this.requestWithRefresh(() => this.http.get<UserProfile>(`${environment.apiUrl}/users/me`, this.authOptions())).pipe(
       map(
         (profile) =>
@@ -154,12 +177,16 @@ export class AuthService {
             subscriptionsSource: 'api',
           }) satisfies LoadedUserProfile,
       ),
-      tap((profile) => this.currentUser.set(this.toAuthUser(profile))),
+      tap((profile) => {
+        this.logDebug('profile:load:success', { subscriptions: profile.subscriptions.length, source: profile.subscriptionsSource });
+        this.currentUser.set(this.toAuthUser(profile));
+      }),
       catchError((error) => {
         if (error.status !== 404) {
           return throwError(() => error);
         }
 
+        this.logWarn('profile:load:fallback-to-auth-me', this.describeHttpError(error));
         return this.requestWithRefresh(() => this.fetchCurrentUser()).pipe(
           map(
             (user) =>
@@ -181,15 +208,22 @@ export class AuthService {
    * @return updated profile response
    */
   updateProfile(payload: UpdateProfilePayload): Observable<UserProfile> {
+    this.logDebug('profile:update:start', { nameLength: payload.name.length, email: this.maskLoginIdentifier(payload.email), hasPassword: !!payload.password });
     return this.requestWithRefresh(() =>
       this.http.put<UserProfile>(`${environment.apiUrl}/users/me`, payload, this.authOptions()),
-    ).pipe(tap((profile) => this.currentUser.set(this.toAuthUser(profile))));
+    ).pipe(
+      tap((profile) => {
+        this.logDebug('profile:update:success');
+        this.currentUser.set(this.toAuthUser(profile));
+      }),
+    );
   }
 
   /**
    * Executes an authenticated GET request with automatic refresh on 401.
    */
   authenticatedGet<T>(url: string): Observable<T> {
+    this.logDebug('request:get:start', { url: this.shortUrl(url) });
     return this.requestWithRefresh(() => this.http.get<T>(url, this.authOptions()));
   }
 
@@ -197,6 +231,7 @@ export class AuthService {
    * Executes an authenticated POST request with automatic refresh on 401.
    */
   authenticatedPost<T>(url: string, body: unknown): Observable<T> {
+    this.logDebug('request:post:start', { url: this.shortUrl(url) });
     return this.requestWithRefresh(() => this.http.post<T>(url, body, this.authOptions()));
   }
 
@@ -204,6 +239,7 @@ export class AuthService {
    * Executes an authenticated DELETE request with automatic refresh on 401.
    */
   authenticatedDelete<T>(url: string): Observable<T> {
+    this.logDebug('request:delete:start', { url: this.shortUrl(url) });
     return this.requestWithRefresh(() => this.http.delete<T>(url, this.authOptions()));
   }
 
@@ -211,6 +247,7 @@ export class AuthService {
    * Stores the access token in browser storage and updates reactive user state.
    */
   private storeSession(response: AuthResponse): void {
+    this.logDebug('session:store', { userId: response.user.id, userEmail: this.maskLoginIdentifier(response.user.email) });
     this.currentUser.set(response.user);
     this.checkingSession.set(false);
     if (isPlatformBrowser(this.platformId)) {
@@ -222,6 +259,7 @@ export class AuthService {
    * Clears all client-side authentication state.
    */
   private clearSession(): void {
+    this.logWarn('session:clear');
     this.currentUser.set(null);
     this.checkingSession.set(false);
     if (isPlatformBrowser(this.platformId)) {
@@ -233,6 +271,7 @@ export class AuthService {
    * Loads the lightweight authenticated user from the auth API.
    */
   private fetchCurrentUser(): Observable<AuthUser> {
+    this.logDebug('request:/auth/me');
     return this.http.get<AuthUser>(`${environment.apiUrl}/auth/me`, this.authOptions());
   }
 
@@ -241,6 +280,7 @@ export class AuthService {
    */
   private refreshSession(): Observable<AuthResponse> {
     if (this.refreshInFlight$) {
+      this.logDebug('refresh:reuse-in-flight');
       return this.refreshInFlight$;
     }
 
@@ -248,7 +288,13 @@ export class AuthService {
       this.http.post<AuthResponse>(`${environment.apiUrl}/auth/refresh`, {}, { withCredentials: true }),
     ).pipe(
       tap((response) => this.storeSession(response)),
+      tap(() => this.logDebug('refresh:success')),
+      catchError((error) => {
+        this.logWarn('refresh:failure', this.describeHttpError(error));
+        return throwError(() => error);
+      }),
       finalize(() => {
+        this.logDebug('refresh:end');
         this.refreshInFlight$ = null;
       }),
       shareReplay({ bufferSize: 1, refCount: false }),
@@ -264,15 +310,20 @@ export class AuthService {
     return requestFactory().pipe(
       catchError((error) => {
         if (!this.isSessionExpiredError(error)) {
+          this.logWarn('request:non-session-error', this.describeHttpError(error));
           return throwError(() => error);
         }
 
         return this.refreshSession().pipe(
           catchError((refreshError) => {
+            this.logWarn('request:refresh-failed', this.describeHttpError(refreshError));
             this.clearSession();
             return throwError(() => refreshError);
           }),
-          switchMap(() => requestFactory()),
+          switchMap(() => {
+            this.logDebug('request:retry-after-refresh');
+            return requestFactory();
+          }),
         );
       }),
     );
@@ -297,6 +348,88 @@ export class AuthService {
       headers: token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : new HttpHeaders(),
       withCredentials: true,
     };
+  }
+
+  /**
+   * Writes a debug log when auth diagnostics are enabled in the environment.
+   */
+  private logDebug(message: string, details?: unknown): void {
+    if (!environment.authDebugEnabled) {
+      return;
+    }
+    console.debug(`[auth] ${message}`, details ?? '');
+  }
+
+  /**
+   * Writes a warning log when auth diagnostics are enabled in the environment.
+   */
+  private logWarn(message: string, details?: unknown): void {
+    if (!environment.authDebugEnabled) {
+      return;
+    }
+    console.warn(`[auth] ${message}`, details ?? '');
+  }
+
+  /**
+   * Reduces sensitive values to a short, readable diagnostic representation.
+   */
+  private describeAuthResponse(response: AuthResponse): { userId: string; email: string; hasRefreshToken: boolean } {
+    return {
+      userId: response.user.id,
+      email: this.maskLoginIdentifier(response.user.email),
+      hasRefreshToken: !!response.refreshToken,
+    };
+  }
+
+  /**
+   * Returns a compact description of the authenticated user for logs.
+   */
+  private describeUser(user: AuthUser): { userId: string; email: string } {
+    return {
+      userId: user.id,
+      email: this.maskLoginIdentifier(user.email),
+    };
+  }
+
+  /**
+   * Keeps URLs readable in logs without dumping the full query string.
+   */
+  private shortUrl(url: string): string {
+    try {
+      const parsed = new URL(url);
+      return `${parsed.pathname}${parsed.search ? parsed.search.slice(0, 120) : ''}`;
+    } catch {
+      return url;
+    }
+  }
+
+  /**
+   * Returns a shortened and partially masked identifier for diagnostics.
+   */
+  private maskLoginIdentifier(value: string): string {
+    const trimmed = value.trim();
+    const atIndex = trimmed.indexOf('@');
+    if (atIndex > 1) {
+      return `${trimmed.slice(0, 2)}***${trimmed.slice(atIndex)}`;
+    }
+    if (trimmed.length <= 4) {
+      return `${trimmed[0] ?? '*'}***`;
+    }
+    return `${trimmed.slice(0, 2)}***${trimmed.slice(-2)}`;
+  }
+
+  /**
+   * Extracts a compact HTTP status/message summary for logs.
+   */
+  private describeHttpError(error: unknown): { status?: number; message?: string } {
+    if (typeof error === 'object' && error !== null) {
+      const typed = error as { status?: number; error?: { message?: string }; message?: string };
+      return {
+        status: typed.status,
+        message: typed.error?.message ?? typed.message,
+      };
+    }
+    return { message: String(error) };
   }
 
   /**

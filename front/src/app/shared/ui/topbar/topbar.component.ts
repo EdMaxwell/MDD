@@ -29,7 +29,8 @@ export class TopbarComponent {
     ...(this.authService.isAuthenticated()
       ? [
         {
-          label: 'Se déconnecter',
+          label: 'Se deconnecter',
+          styleClass: 'logout-item',
           command: () => this.logout(),
         },
       ]
@@ -40,7 +41,7 @@ export class TopbarComponent {
       routerLinkActiveOptions: { exact: true },
     },
     {
-      label: 'Thèmes',
+      label: 'Themes',
       routerLink: '/topics',
     },
   ]);

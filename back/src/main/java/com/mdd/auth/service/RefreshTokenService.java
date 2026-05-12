@@ -15,6 +15,8 @@ import java.time.Duration;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class RefreshTokenService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RefreshTokenService.class);
     private static final int TOKEN_BYTES = 64;
     private static final Duration ROTATION_REUSE_GRACE_PERIOD = Duration.ofSeconds(5);
 
@@ -60,6 +63,7 @@ public class RefreshTokenService {
                 now
         );
         refreshTokenRepository.save(refreshToken);
+        LOGGER.debug("Issued refresh token for user {} (device={})", user.getId(), deviceName(request));
         return rawToken;
     }
 
@@ -77,11 +81,13 @@ public class RefreshTokenService {
     @Transactional
     public RefreshTokenRotation rotate(String rawRefreshToken, HttpServletRequest request) {
         String tokenHash = hash(rawRefreshToken);
+        String tokenFingerprint = fingerprint(tokenHash);
 
         RefreshToken existingToken = refreshTokenRepository.findByTokenHash(tokenHash)
                 .orElse(null);
 
         if (existingToken == null) {
+            LOGGER.debug("Refresh rotate rejected: token not found (fingerprint={})", tokenFingerprint);
             throw new InvalidRefreshTokenException();
         }
 
@@ -90,21 +96,29 @@ public class RefreshTokenService {
             if (revokedAt != null && !revokedAt.isBefore(Instant.now(clock).minus(ROTATION_REUSE_GRACE_PERIOD))) {
                 // Concurrent refresh attempts from the same session can briefly reuse the previous token.
                 // Treat this as an invalid token, not as suspicious theft.
+                LOGGER.debug("Refresh rotate rejected in grace window (user={}, fingerprint={})",
+                        existingToken.getUser().getId(), tokenFingerprint);
                 throw new InvalidRefreshTokenException();
             }
             // A revoked token appearing again may mean a stolen token was replayed.
             // Revoking the user's remaining active tokens forces a clean login.
             revokeActiveTokensFor(existingToken.getUser());
+            LOGGER.warn("Suspicious reuse of revoked refresh token for user {} (fingerprint={})",
+                    existingToken.getUser().getId(), tokenFingerprint);
             throw new SuspiciousRefreshTokenReuseException();
         }
 
         Instant now = Instant.now(clock);
         if (!existingToken.isUsable(now)) {
+            LOGGER.debug("Refresh rotate rejected: token not usable (user={}, fingerprint={})",
+                    existingToken.getUser().getId(), tokenFingerprint);
             throw new InvalidRefreshTokenException();
         }
 
         existingToken.revoke(now);
         String nextRefreshToken = createFor(existingToken.getUser(), request);
+        LOGGER.debug("Refresh rotate succeeded for user {} (fingerprint={})",
+                existingToken.getUser().getId(), tokenFingerprint);
         return new RefreshTokenRotation(existingToken.getUser(), nextRefreshToken);
     }
 
@@ -116,18 +130,24 @@ public class RefreshTokenService {
     @Transactional
     public void revoke(String rawRefreshToken) {
         String tokenHash = hash(rawRefreshToken);
+        String tokenFingerprint = fingerprint(tokenHash);
         RefreshToken refreshToken = refreshTokenRepository.findByTokenHash(tokenHash)
                 .orElse(null);
 
         if (refreshToken == null) {
+            LOGGER.debug("Refresh revoke rejected: token not found (fingerprint={})", tokenFingerprint);
             throw new InvalidRefreshTokenException();
         }
 
         Instant now = Instant.now(clock);
         if (refreshToken.isUsable(now)) {
             refreshToken.revoke(now);
+            LOGGER.debug("Refresh token revoked for user {} (fingerprint={})", refreshToken.getUser().getId(), tokenFingerprint);
             return;
         }
+
+        LOGGER.debug("Refresh revoke skipped: token already unusable (user={}, fingerprint={})",
+                refreshToken.getUser().getId(), tokenFingerprint);
     }
 
     /**
@@ -135,9 +155,12 @@ public class RefreshTokenService {
      */
     private void revokeActiveTokensFor(User user) {
         Instant now = Instant.now(clock);
+        int revokedCount = 0;
         for (RefreshToken refreshToken : refreshTokenRepository.findAllByUserAndRevokedAtIsNull(user)) {
             refreshToken.revoke(now);
+            revokedCount++;
         }
+        LOGGER.warn("Revoked {} active refresh token(s) after suspicious reuse for user {}", revokedCount, user.getId());
     }
 
     /**
@@ -160,6 +183,14 @@ public class RefreshTokenService {
         } catch (NoSuchAlgorithmException exception) {
             throw new IllegalStateException("SHA-256 is not available", exception);
         }
+    }
+
+    /**
+     * Builds a short non-sensitive token identifier for logs.
+     */
+    private String fingerprint(String tokenHash) {
+        int length = Math.min(12, tokenHash.length());
+        return tokenHash.substring(0, length);
     }
 
     /**

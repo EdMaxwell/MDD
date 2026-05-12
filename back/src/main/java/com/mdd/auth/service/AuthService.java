@@ -12,6 +12,8 @@ import com.mdd.auth.exception.InvalidRefreshTokenException;
 import com.mdd.auth.repository.UserRepository;
 import com.mdd.security.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class AuthService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -110,10 +114,13 @@ public class AuthService {
     @Transactional
     public AuthResponse refresh(String rawRefreshToken, HttpServletRequest servletRequest) {
         if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
+            LOGGER.debug("Refresh rejected: missing token payload");
             throw new InvalidRefreshTokenException();
         }
+        LOGGER.debug("Refresh started from {}", servletRequest == null ? "unknown-request" : servletRequest.getRemoteAddr());
         RefreshTokenRotation rotation = refreshTokenService.rotate(rawRefreshToken, servletRequest);
         String accessToken = jwtService.generateToken(rotation.user());
+        LOGGER.debug("Refresh succeeded for user {}", rotation.user().getId());
         return new AuthResponse(accessToken, rotation.refreshToken(), toUserResponse(rotation.user()));
     }
 
@@ -136,12 +143,15 @@ public class AuthService {
      */
     public void logout(String rawRefreshToken) {
         if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
+            LOGGER.debug("Logout called without refresh token payload");
             return;
         }
         try {
             refreshTokenService.revoke(rawRefreshToken);
+            LOGGER.debug("Logout refresh token revoked");
         } catch (InvalidRefreshTokenException exception) {
             // Logout remains idempotent so the client can always clear its HttpOnly cookie.
+            LOGGER.debug("Logout ignored invalid refresh token");
         }
     }
 

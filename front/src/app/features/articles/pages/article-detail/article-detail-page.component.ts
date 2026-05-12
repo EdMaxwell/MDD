@@ -52,7 +52,13 @@ export class ArticleDetailPageComponent {
    * Returns to the feed page.
    */
   protected goBack(): void {
-    this.router.navigateByUrl('/home');
+    this.router.navigate(['/home'], {
+      queryParams: {
+        page: this.route.snapshot.queryParamMap.get('page') ?? undefined,
+        size: this.route.snapshot.queryParamMap.get('size') ?? undefined,
+        sort: this.route.snapshot.queryParamMap.get('sort') ?? undefined,
+      },
+    });
   }
 
   /**

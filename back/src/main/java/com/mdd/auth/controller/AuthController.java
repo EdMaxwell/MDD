@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Exposes authentication endpoints and keeps refresh tokens in HttpOnly cookies.
@@ -32,6 +34,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthController.class);
 
     private final AuthService authService;
     private final JwtProperties jwtProperties;
@@ -59,8 +63,10 @@ public class AuthController {
             HttpServletRequest servletRequest,
             HttpServletResponse servletResponse
     ) {
+        LOGGER.debug("Register request received from {}", requestContext(servletRequest));
         AuthResponse response = authService.register(request, servletRequest);
         setRefreshCookie(servletResponse, response.refreshToken());
+        LOGGER.debug("Register succeeded for user {}", response.user().id());
         return response.withoutRefreshToken();
     }
 
@@ -78,8 +84,10 @@ public class AuthController {
             HttpServletRequest servletRequest,
             HttpServletResponse servletResponse
     ) {
+        LOGGER.debug("Login request received from {}", requestContext(servletRequest));
         AuthResponse response = authService.login(request, servletRequest);
         setRefreshCookie(servletResponse, response.refreshToken());
+        LOGGER.debug("Login succeeded for user {}", response.user().id());
         return response.withoutRefreshToken();
     }
 
@@ -101,13 +109,23 @@ public class AuthController {
             HttpServletResponse servletResponse
     ) {
         RefreshTokenResolution resolution = resolveRefreshToken(request, servletRequest);
+        LOGGER.debug(
+                "Refresh requested from {} (source={}, cookiePresent={}, bodyPresent={})",
+                requestContext(servletRequest),
+                resolution.source(),
+                resolution.cookiePresent(),
+                resolution.bodyPresent()
+        );
         try {
             AuthResponse response = authService.refresh(resolution.token(), servletRequest);
             setRefreshCookie(servletResponse, response.refreshToken());
+            LOGGER.debug("Refresh succeeded for user {}", response.user().id());
             return response.withoutRefreshToken();
         } catch (InvalidRefreshTokenException | SuspiciousRefreshTokenReuseException exception) {
+            LOGGER.warn("Refresh rejected (source={}, reason={})", resolution.source(), exception.getMessage());
             throw exception;
         } catch (RuntimeException exception) {
+            LOGGER.warn("Unexpected refresh failure converted to invalid refresh token (source={})", resolution.source(), exception);
             throw new InvalidRefreshTokenException();
         }
     }
@@ -127,6 +145,13 @@ public class AuthController {
             HttpServletResponse servletResponse
     ) {
         RefreshTokenResolution resolution = resolveRefreshToken(request, servletRequest);
+        LOGGER.debug(
+                "Logout requested from {} (source={}, cookiePresent={}, bodyPresent={})",
+                requestContext(servletRequest),
+                resolution.source(),
+                resolution.cookiePresent(),
+                resolution.bodyPresent()
+        );
         authService.logout(resolution.token());
         clearRefreshCookie(servletResponse);
     }
@@ -158,6 +183,26 @@ public class AuthController {
             return new RefreshTokenResolution(cookieToken, "cookie", cookiePresent, bodyPresent);
         }
         return new RefreshTokenResolution(bodyToken, bodyPresent ? "body" : "missing", cookiePresent, bodyPresent);
+    }
+
+    /**
+     * Creates a compact, non-sensitive description of the request origin.
+     */
+    private String requestContext(HttpServletRequest request) {
+        String origin = request.getHeader("Origin");
+        String userAgent = request.getHeader("User-Agent");
+        String compactUserAgent = userAgent == null ? "unknown" : truncate(userAgent, 60);
+        return String.format("ip=%s origin=%s ua=%s", request.getRemoteAddr(), origin, compactUserAgent);
+    }
+
+    /**
+     * Truncates log values to keep lines readable and avoid oversized headers in logs.
+     */
+    private String truncate(String value, int maxLength) {
+        if (value == null || value.length() <= maxLength) {
+            return value;
+        }
+        return value.substring(0, maxLength);
     }
 
     /**

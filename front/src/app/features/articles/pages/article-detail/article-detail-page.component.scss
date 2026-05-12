@@ -134,7 +134,7 @@ h2 {
 .comment-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 58px;
-  align-items: end;
+  align-items: center;
   gap: 1rem;
   width: min(100%, 850px);
   margin: 1rem auto 0;
@@ -168,16 +168,18 @@ h2 {
   border: 0;
   background: transparent;
   cursor: pointer;
-  position: relative;
+  display: grid;
+  place-items: center;
+  align-self: center;
 }
 
-.send-button span {
-  position: absolute;
-  inset: 9px;
-  transform: rotate(45deg);
-  border-top: 4px solid #7763da;
-  border-right: 4px solid #7763da;
-  clip-path: polygon(0 0, 100% 0, 100% 100%);
+.send-icon {
+  width: 40px;
+  height: 40px;
+  display: block;
+  background-color: #7763da;
+  mask: url('/assets/send-icon.svg') center / contain no-repeat;
+  -webkit-mask: url('/assets/send-icon.svg') center / contain no-repeat;
 }
 
 .send-button:disabled {
@@ -284,5 +286,10 @@ h2 {
   .send-button {
     width: 48px;
     height: 48px;
+  }
+
+  .send-icon {
+    width: 34px;
+    height: 34px;
   }
 }

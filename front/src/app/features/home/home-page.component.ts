@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, effect, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { PaginatorState } from 'primeng/types/paginator';
 import {
   ARTICLE_FEED_PAGE_SIZE_OPTIONS,
@@ -30,6 +30,7 @@ export class HomePageComponent {
   protected readonly pageSizeOptions = [...ARTICLE_FEED_PAGE_SIZE_OPTIONS];
   protected readonly authService = inject(AuthService);
   private readonly articleFeedService = inject(ArticleFeedService);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
   protected readonly articles = signal<ArticleFeedItem[]>([]);
@@ -42,6 +43,7 @@ export class HomePageComponent {
 
   constructor() {
     this.authService.init();
+    this.restoreFeedStateFromQueryParams();
     this.loadFeed();
 
     effect(() => {
@@ -83,7 +85,35 @@ export class HomePageComponent {
    * Opens an article detail page from a selected feed card.
    */
   protected openArticle(articleId: string): void {
-    this.router.navigate(['/articles', articleId]);
+    this.router.navigate(['/articles', articleId], {
+      queryParams: {
+        page: this.currentPage(),
+        size: this.pageSize(),
+        sort: this.sortDirection(),
+      },
+    });
+  }
+
+  /**
+   * Restores the feed state from URL query parameters when returning from article detail.
+   */
+  private restoreFeedStateFromQueryParams(): void {
+    const queryParams = this.route.snapshot.queryParamMap;
+    const page = this.parsePositiveInteger(queryParams.get('page'));
+    const size = this.parsePositiveInteger(queryParams.get('size'));
+    const sort = queryParams.get('sort');
+
+    if (page !== null) {
+      this.currentPage.set(page);
+    }
+
+    if (size !== null && this.pageSizeOptions.some((option) => option === size)) {
+      this.pageSize.set(size);
+    }
+
+    if (sort === 'asc' || sort === 'desc') {
+      this.sortDirection.set(sort);
+    }
   }
 
   /**
@@ -120,5 +150,17 @@ export class HomePageComponent {
     }
 
     return 'Impossible de charger les articles pour le moment.';
+  }
+
+  /**
+   * Parses a non-negative integer from a query parameter.
+   */
+  private parsePositiveInteger(value: string | null): number | null {
+    if (value === null) {
+      return null;
+    }
+
+    const parsedValue = Number.parseInt(value, 10);
+    return Number.isNaN(parsedValue) || parsedValue < 0 ? null : parsedValue;
   }
 }

@@ -26,3 +26,8 @@ app:
       refresh-cookie-name: ${JWT_REFRESH_COOKIE_NAME:mdd_refresh_token}
       refresh-cookie-secure: ${JWT_REFRESH_COOKIE_SECURE:false}
       refresh-cookie-same-site: ${JWT_REFRESH_COOKIE_SAME_SITE:Lax}
+
+logging:
+  level:
+    com.mdd.auth: ${AUTH_DEBUG_LOG_LEVEL:INFO}
+    com.mdd.security.JwtAuthenticationFilter: ${AUTH_DEBUG_LOG_LEVEL:INFO}
