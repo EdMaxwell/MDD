@@ -9,6 +9,7 @@ export interface PageResponse<T> {
   last: boolean;
 }
 
+/** API collection response accepted while old list endpoints and paginated endpoints coexist. */
 export type PaginatedApiResponse<T> = T[] | PageResponse<T>;
 
 /**

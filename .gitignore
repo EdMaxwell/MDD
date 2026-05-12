@@ -2,7 +2,7 @@
 .idea/
 .DS_Store
 Thumbs.db
-docs/reports
+docs/
 
 # Frontend (Angular / npm)
 front/node_modules/

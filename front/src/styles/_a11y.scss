@@ -1,3 +1,4 @@
+// Visually hides content while keeping it available to screen readers.
 @mixin sr-only {
   position: absolute;
   width: 1px;

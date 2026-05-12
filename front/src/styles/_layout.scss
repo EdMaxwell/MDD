@@ -1,3 +1,4 @@
+// Base host styling applied by top-level page components.
 @mixin page-host {
   display: block;
   min-height: 100dvh;
@@ -6,10 +7,12 @@
   background: #ffffff;
 }
 
+// Full-height page wrapper used before a bounded inner layout is needed.
 @mixin page-shell {
   min-height: 100dvh;
 }
 
+// Centers page content while preserving the requested grid rows.
 @mixin bounded-page($rows: auto 1fr, $max-width: 1440px) {
   width: min(100%, $max-width);
   min-height: 100dvh;
@@ -18,10 +21,12 @@
   grid-template-rows: $rows;
 }
 
+// Thin divider that matches the project topbar visual language.
 @mixin topbar-divider {
   border-bottom: 1px solid #1d1d1d;
 }
 
+// Lets mobile layouts break out of centered desktop bounds.
 @mixin mobile-full-bleed {
   width: 100dvw;
   max-width: none;
